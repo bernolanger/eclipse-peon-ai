@@ -57,7 +57,7 @@ public class StreamingBridge implements StreamingChatResponseHandler {
         this.errorRef = new AtomicReference<>();
         this.handleRef = new AtomicReference<>();
         this.monitor = AiMonitor.nullSafety(monitor);
-        this.monitor.onStreamingChunk(new OnPartialAiResponse(Type.WAITING, null, startedAt));
+        this.monitor.onStreamingChunk(new OnPartialAiResponse(Type.START, null, startedAt));
 
         model.chat(request, this);
 
@@ -122,12 +122,14 @@ public class StreamingBridge implements StreamingChatResponseHandler {
 
     @Override
     public void onCompleteResponse(ChatResponse completeResponse) {
+        this.monitor.onStreamingChunk(new OnPartialAiResponse(Type.END, null, startedAt));
         responseRef.set(completeResponse);
         latch.countDown();
     }
 
     @Override
     public void onError(Throwable error) {
+        this.monitor.onStreamingChunk(new OnPartialAiResponse(Type.END, null, startedAt));
         errorRef.set(error);
         latch.countDown();
     }

@@ -2,12 +2,10 @@ package org.sterl.llmpeon.parts;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.resources.IFile;
@@ -92,7 +90,6 @@ public class AIChatView implements EclipseAiMonitor {
     );
 
     private final AtomicReference<IProgressMonitor> monitorRef = new AtomicReference<>(new NullProgressMonitor());
-    private final AtomicLong streamingTokenCount = new AtomicLong();
     private final VoiceInputService voiceService = new VoiceInputService();
     private boolean recording = false;
 
@@ -279,6 +276,7 @@ public class AIChatView implements EclipseAiMonitor {
     @Override
     public void onChatResponse(SimpleMessage m) {
         EclipseUtil.runInUiThread(parent, () -> {
+            chatHistory.hideLiveStatus();
             chatHistory.appendMessage(m);
             statusLine.updateCompact(getActiveService().getTokenSize(), getActiveService().getTokenWindow());
         });
@@ -298,11 +296,7 @@ public class AIChatView implements EclipseAiMonitor {
 
     @Override
     public void onStreamingChunk(OnPartialAiResponse r) {
-        long elapsed = Duration.between(r.startedAt(), Instant.now()).toSeconds();
-        long tokens = r.type() != OnPartialAiResponse.Type.WAITING
-                ? streamingTokenCount.incrementAndGet() : 0;
-        double tokPerSec = elapsed > 0 ? tokens / (double) elapsed : 0;
-        EclipseUtil.runInUiThread(parent, () -> chatHistory.onStreamingChunk(r, elapsed, tokPerSec));
+        chatHistory.onStreamingChunk(r);
     }
 
     @Override
@@ -542,7 +536,6 @@ public class AIChatView implements EclipseAiMonitor {
             return;
         }
 
-        streamingTokenCount.set(0);
         lockWhileWorking(true);
         Job.create("Peon AI request", monitor -> {
             monitor.beginTask("Arbeit, Arbeit!", currentMode == PeonMode.AGENT ? ToolService.MAX_ITERATIONS * 2 : ToolService.MAX_ITERATIONS);
@@ -571,7 +564,6 @@ public class AIChatView implements EclipseAiMonitor {
                 }
             } finally {
                 EclipseUtil.runInUiThread(parent, () -> lockWhileWorking(false));
-                EclipseUtil.runInUiThread(parent, () -> chatHistory.hideLiveStatus());
                 monitor.done();
                 active.setStandingOrders(Collections.emptyList());
                 monitorRef.set(new NullProgressMonitor());
@@ -593,10 +585,8 @@ public class AIChatView implements EclipseAiMonitor {
             }
             actionsBar.setAgentModeAvailable(currentProject != null && currentProject.isOpen());
         }
-        EclipseUtil.runInUiThread(parent, () -> {
-            statusLine.setPinned(pinned);
-            refreshStatusLine();
-        });
+        statusLine.setPinned(pinned);
+        refreshStatusLine();
     }
 
     private void lockWhileWorking(boolean value) {
@@ -609,6 +599,7 @@ public class AIChatView implements EclipseAiMonitor {
 
     private void showQuestion(String question, java.util.List<String> answers,
             java.util.function.Consumer<String> onAnswer) {
+        chatHistory.updateLiveResponseInUIThread("Wating for User...", 0, null);
         EclipseUtil.runInUiThread(parent, () -> {
             ((GridData) chatInput.getLayoutData()).exclude = true;
             chatInput.setVisible(false);
