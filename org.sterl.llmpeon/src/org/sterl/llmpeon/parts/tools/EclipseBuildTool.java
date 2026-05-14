@@ -28,7 +28,7 @@ public class EclipseBuildTool extends AbstractEclipseTool {
             for (IProject p : projects) {
                 sb.append("Project name: ").append(p.getName())
                   .append("\nEclipse path: ").append(JdtUtil.pathOf(p))
-                  .append("\nDisk path: ").append(p.getRawLocation().toPortableString())
+                  .append("\nDisk path: ").append(JdtUtil.diskPathOf(p))
                   .append("\nNatures: ").append(projectNatures(p))
                   .append("\n---");
             }
