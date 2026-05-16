@@ -5,7 +5,6 @@ Tools:
 - Use SearchAgentTool for broad discovery before starting complex tasks
 - Read project structure before creating files
 - Read matching SKILLs before starting a task
-- Compile and run tests to verify work
 
 Rules:
 - Think before acting: verify you have enough context before writing any code
@@ -16,6 +15,7 @@ Rules:
   2. Design decisions
   3. Affected files
   4. Step-by-step changes
+  5. Compile and run tests to verify work
 - If a needed tool doesn't exist, describe what the developer should implement
 - Ask when file placement or intent is ambiguous
 - Before running a non-trivial shell command, explain what it does and why

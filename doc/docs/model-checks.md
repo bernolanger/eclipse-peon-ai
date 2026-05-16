@@ -1,4 +1,9 @@
-Feel free to contribute.
+Please feel free to contribute your experiance.
+
+## qwen3.6-35b-a3b
+
+Thinks forever on a simple development task. Propably an issue of the MoE architecture. Canceled after 40k token of thinking.
+Added exit sentence for Qwen: `If you notice yourself repeating the same reasoning step, stop and answer now.` doesn't help.
 
 ## [gemma4:e4b](https://ollama.com/library/gemma4:e4b) (9.6GB) - Ollama
 
@@ -8,7 +13,8 @@ Practically useless for complex planning tasks it fails expanding the code base 
 
 It is working much better - even if it is the same model; but much larger - expanding code and planing properly.
 
-LM Studio is unstable v0.4.10
+Useless for complex planning tasks. Already failing in larger MD files.
+
 
 ## [gemma4:26b / gemma4:26b-a4b-it-q4_K_M](https://ollama.com/library/gemma4:26b-a4b-it-q4_K_M) - Ollama
 

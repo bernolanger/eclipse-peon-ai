@@ -28,17 +28,16 @@ export default defineConfig({
             { text: 'Agents & Skills', link: '/setup/agents-and-skills' },
             { text: 'Template Variables', link: '/setup/template-variables' },
             { text: 'Agent Mode', link: '/setup/agent-mode' },
-            { text: 'Model Comparison', link: '/model-checks.md' }
-          ]
-        },
-        {
-          text: 'Setup',
-          items: [
+        ]
+    },
+    {
+        text: 'Setup',
+        items: [
             { text: 'Installation', link: '/setup/installation' },
             { text: 'Configuration', link: '/setup/configuration' },
             { text: 'MCP', link: '/setup/mcp-configuration' },
-            { text: 'Voice', link: '/setup/voice-config' }
-            
+            { text: 'Voice', link: '/setup/voice-config' },
+            { text: 'Which model?', link: '/model-checks.md' }
           ]
         },
         {
