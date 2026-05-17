@@ -37,7 +37,9 @@ export default defineConfig({
             { text: 'Configuration', link: '/setup/configuration' },
             { text: 'MCP', link: '/setup/mcp-configuration' },
             { text: 'Voice', link: '/setup/voice-config' },
-            { text: 'Which model?', link: '/model-checks.md' }
+            { text: 'Which model?', link: '/model-checks.md' },
+            { text: 'Qwen tuning', link: '/setup/qwen3627b_lmstudio_optimization.md' }
+            
           ]
         },
         {

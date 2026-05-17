@@ -24,17 +24,28 @@ Select the bottom table and ask the LLM to add a benchmar result to the table --
 
 https://github.com/sterlp/eclipse-peon-ai/releases/tag/dev-challenge-MockLlmServer
 
-## [Qwen 3.6 27B](https://huggingface.co/Qwen/Qwen3.6-27B) - on peon-ai v1.6.1
+## qwen3.6-27b-i1 K/V Q8_0 - on peon-ai v1.6.3
 
 - Used tools in batch
 - Properly used "readJavaType" - like Opus or Sonnet
 - Discovers existing code base
+- Took around 75k token to build
+- very close / equal to to Qwen 3.6 27B (required manual compact)
 
-## [devstral-2512](https://docs.mistral.ai/models/model-cards/devstral-2-25-12) - on peon-ai v1.6.1
+## [Qwen 3.6 27B](https://huggingface.co/Qwen/Qwen3.6-27B) K/V Q8_0 - on peon-ai v1.6.3
+
+- Used tools in batch
+- Properly used "readJavaType" - like Opus or Sonnet
+- Discovers existing code base
+- Took around 75k token to build (required manual compact)
+
+
+## [devstral-2512](https://docs.mistral.ai/models/model-cards/devstral-2-25-12) - on peon-ai v1.6.3
 
 1. Failed in first attempt `dev-challenge-MockLlmServer` with tool call cycle of death.
 2. Second attempt was okay and working - in two cycles
 - Ignores existing code base
+- Took around 75k token to build
 
 ## qwen3.6-35b-a3b - on peon-ai v1.6.1
 
