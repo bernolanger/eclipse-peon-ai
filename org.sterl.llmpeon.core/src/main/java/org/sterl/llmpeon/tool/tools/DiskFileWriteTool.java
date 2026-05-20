@@ -43,7 +43,7 @@ public class DiskFileWriteTool extends AbstractTool {
     @Tool("Disk: Overwrite existing file.")
     public String writeDiskFile(@P(name = "filePath") String filePath, @P(name = "newContent") String newContent) {
         ArgsUtil.requireNonBlank(filePath, "filePath");
-        ArgsUtil.requireNonBlank(newContent, "newContent");
+        ArgsUtil.requireNonNull(newContent, "newContent");
 
         Path resolved = resolve(filePath);
         if (resolved == null || !Files.isRegularFile(resolved)) {

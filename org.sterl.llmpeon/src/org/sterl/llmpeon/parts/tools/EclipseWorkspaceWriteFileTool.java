@@ -39,7 +39,7 @@ public class EclipseWorkspaceWriteFileTool extends AbstractEclipseTool {
 
         ArgsUtil.requireNonBlank(filePath, "filePath");
         ArgsUtil.requireNonNull(line, "line");
-        ArgsUtil.requireNonBlank(newContent, "newContent");
+        ArgsUtil.requireNonNull(newContent, "newContent");
 
         var inFile = EclipseUtil.resolveInEclipse(filePath);
         if (inFile.isEmpty() || !(inFile.get() instanceof IFile eclipseFile)) {
