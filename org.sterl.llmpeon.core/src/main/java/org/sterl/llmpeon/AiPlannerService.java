@@ -28,7 +28,7 @@ public class AiPlannerService extends AbstractChatService {
 
     @Override
     protected double getTemperature() {
-        return 0.8;
+        return configuredModel.getConfig().getPlanTemperature();
     }
 
     @Override

@@ -5,7 +5,9 @@ import java.net.Socket;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.sterl.llmpeon.ai.model.AiModel;
 
@@ -23,7 +25,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Getter
 @EqualsAndHashCode
-@ToString(of = {"providerType", "url", "model", "thinkingEnabled", "sendThinkingEnabled"})
+@ToString(of = {"providerType", "url", "model", "thinkingEnabled", "sendThinkingEnabled", "planTemperature", "devTemperature"})
 public class LlmConfig {
 
     @Default
@@ -36,6 +38,10 @@ public class LlmConfig {
     @Default
     private final int tokenWindow = 128000;
     @Default
+    private final double planTemperature = 0.8;
+    @Default
+    private final double devTemperature = 0.4;
+    @Default
     private final boolean thinkingEnabled = true;
     @Default
     private final boolean sendThinkingEnabled = true;
@@ -47,7 +53,14 @@ public class LlmConfig {
     private final String commandDirectory = null;
     @Default
     private final boolean diskToolsEnabled = false;
+    @Default
     private final boolean shellCommandConfirmationRequired = false;
+    @Default
+    private final boolean debugMode = false;
+    @Default
+    private final Map<String, String> queryParams = new LinkedHashMap<>();
+    @Default
+    private final Map<String, String> headerParams = new LinkedHashMap<>();
     
     /**
      * Some LLMs needs this some not

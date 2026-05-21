@@ -24,9 +24,8 @@ public class AiDeveloperService extends AbstractChatService {
         return templateContext.process(BASE_PROMPT);
     }
 
-    @Override
     protected double getTemperature() {
-        return 0.3;
+        return configuredModel.getConfig().getDevTemperature();
     }
 
     @Override

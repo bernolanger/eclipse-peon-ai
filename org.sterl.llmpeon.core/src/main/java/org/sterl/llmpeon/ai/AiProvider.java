@@ -6,6 +6,7 @@ import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,9 @@ public enum AiProvider {
                     .modelName(c.getModel())
                     .think(c.isThinkingEnabled())
                     .returnThinking(c.isThinkingEnabled())
+                    .customHeaders(c.getHeaderParams())
+                    .logRequests(c.isDebugMode())
+                    .logResponses(c.isDebugMode())
                     .build();
         }
 
@@ -68,6 +72,10 @@ public enum AiProvider {
                     .apiKey(c.getApiKey())
                     .returnThinking(c.isThinkingEnabled())
                     .sendThinking(c.shouldWeSendThinkingBackToLLM())
+                    .customHeaders(c.getHeaderParams())
+                    .customQueryParams(c.getQueryParams())
+                    .logRequests(c.isDebugMode())
+                    .logResponses(c.isDebugMode())
                     .build();
         }
 
@@ -76,6 +84,7 @@ public enum AiProvider {
             var request = HttpRequest.newBuilder()
                     .uri(URI.create(c.getUrl() + "/models"))
                     .header("Authorization", "Bearer " + c.getApiKey());
+            c.getHeaderParams().forEach(request::header);
             
             return SharedHttpClient.cancelAndGet(request, AiModelParser::parseOpenApiModels);
         }
@@ -96,6 +105,10 @@ public enum AiProvider {
                     .httpClientBuilder(http1)
                     .returnThinking(c.isThinkingEnabled())
                     .sendThinking(c.shouldWeSendThinkingBackToLLM())
+                    .customHeaders(c.getHeaderParams())
+                    .customQueryParams(c.getQueryParams())
+                    .logRequests(c.isDebugMode())
+                    .logResponses(c.isDebugMode())
                     .build();
         }
 
@@ -104,6 +117,7 @@ public enum AiProvider {
             var url = c.getUrl().replace("/v1", "/api/v1");
             var request = HttpRequest.newBuilder()
                     .uri(URI.create(url + "/models"));
+            c.getHeaderParams().forEach(request::header);
             return SharedHttpClient.cancelAndGet(request, AiModelParser::parseLmStudioModels);
         }
     },
@@ -120,14 +134,18 @@ public enum AiProvider {
             result.returnThinking(Boolean.TRUE).sendThinking(Boolean.TRUE);
             if (c.isThinkingEnabled()) {
                 result.thinkingConfig(GeminiThinkingConfig.builder()
-                        .thinkingLevel(GeminiThinkingLevel.MEDIUM)
+                        .thinkingLevel(GeminiThinkingLevel.HIGH)
                         .build());
             } else {
                 result.thinkingConfig(GeminiThinkingConfig.builder()
                         .thinkingBudget(0)
                         .build());
             }
-            return result.build();
+            return result
+                    .customHeaders(c.getHeaderParams())
+                    .logRequests(c.isDebugMode())
+                    .logResponses(c.isDebugMode())
+                    .build();
         }
     },
 
@@ -142,6 +160,9 @@ public enum AiProvider {
                     .apiKey(c.getApiKey())
                     .returnThinking(c.isThinkingEnabled())
                     .sendThinking(c.shouldWeSendThinkingBackToLLM())
+                    .customHeaders(c.getHeaderParams())
+                    .logRequests(c.isDebugMode())
+                    .logResponses(c.isDebugMode())
                     .build();
         }
 
@@ -150,6 +171,7 @@ public enum AiProvider {
             var request = HttpRequest.newBuilder()
                     .uri(URI.create(MODELS_URL))
                     .header("X-API-Key", c.getApiKey());
+            c.getHeaderParams().forEach(request::header);
             return SharedHttpClient.cancelAndGet(request, AiModelParser::parseMistralModels);
         }
     },
@@ -169,7 +191,11 @@ public enum AiProvider {
             if (c.isThinkingEnabled()) {
                 builder.thinkingType("enabled");
             }
-            return builder.build();
+            return builder
+                    .customHeaders(c.getHeaderParams())
+                    .logRequests(c.isDebugMode())
+                    .logResponses(c.isDebugMode())
+                    .build();
         }
 
         @Override
@@ -178,6 +204,7 @@ public enum AiProvider {
                     .uri(URI.create(MODELS_URL))
                     .header("x-api-key", c.getApiKey())
                     .header("anthropic-version", ANTHROPIC_VERSION);
+            c.getHeaderParams().forEach(request::header);
 
             return SharedHttpClient.cancelAndGet(request, AiModelParser::parseAnthropicModels);
         }
@@ -202,6 +229,10 @@ public enum AiProvider {
                     .baseUrl(baseUrl(c))
                     .apiKey(c.getApiKey() != null && !c.getApiKey().isBlank() ? c.getApiKey() : "not-configured")
                     .modelName(c.getModel())
+                    .customHeaders(c.getHeaderParams())
+                    .customQueryParams(c.getQueryParams())
+                    .logRequests(c.isDebugMode())
+                    .logResponses(c.isDebugMode())
                     .build();
         }
 
@@ -212,6 +243,7 @@ public enum AiProvider {
                     .uri(URI.create(CATALOG_URL))
                     .header("Authorization", "Bearer " + c.getApiKey())
                     .header("X-GitHub-Api-Version", CATALOG_API_VERSION);
+            c.getHeaderParams().forEach(request::header);
 
             return SharedHttpClient.cancelAndGet(request, AiModelParser::parseGithubModels);
         }
@@ -241,12 +273,21 @@ public enum AiProvider {
 
         @Override
         StreamingChatModel buildModel(LlmConfig c) {
+            var headers = new HashMap<String, String>();
+            headers.putAll(copilotHeaders());
+            headers.putAll(c.getHeaderParams());
+            
             return OpenAiStreamingChatModel.builder()
                     .timeout(TIMEOUT)
                     .baseUrl(baseUrl(c))
                     .apiKey(c.getApiKey() != null && !c.getApiKey().isBlank() ? c.getApiKey() : "not-configured")
                     .modelName(c.getModel())
-                    .customHeaders(copilotHeaders())
+                    
+                    .customHeaders(headers)
+                    .customQueryParams(c.getQueryParams())
+                    .logRequests(c.isDebugMode())
+                    .logResponses(c.isDebugMode())
+
                     .build();
         }
 
@@ -256,7 +297,12 @@ public enum AiProvider {
                     .uri(URI.create(DEFAULT_BASE_URL + "/models"))
                     .timeout(Duration.ofSeconds(20))
                     .header("Authorization", "Bearer " + c.getApiKey());
-            copilotHeaders().forEach(request::header);
+            
+            var headers = new HashMap<String, String>();
+            headers.putAll(copilotHeaders());
+            headers.putAll(c.getHeaderParams());
+            
+            headers.forEach(request::header);
 
             return SharedHttpClient.cancelAndGet(request, AiModelParser::parseCopilotApiModels);
         }

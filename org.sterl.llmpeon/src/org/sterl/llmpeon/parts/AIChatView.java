@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.resources.IFile;
@@ -64,7 +63,6 @@ import org.sterl.llmpeon.voice.VoiceInputService;
 import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.ToolExecutionException;
-import dev.langchain4j.model.chat.response.ChatResponse;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
@@ -73,7 +71,6 @@ import jakarta.inject.Named;
 public class AIChatView implements EclipseAiMonitor {
 
     private static final ILog LOG = Platform.getLog(AIChatView.class);
-    private final AtomicBoolean debugLog = new AtomicBoolean();
 
     // Declared first so the aiService field initializer lambdas can capture them
     // without violating the Java forward-reference restriction.
@@ -97,6 +94,7 @@ public class AIChatView implements EclipseAiMonitor {
     private AtomicReference<LlmConfig> lastListedConfig = new AtomicReference<>();
     private volatile IProject currentProject;
     private volatile boolean projectPinned = false;
+    private volatile LlmConfig lastAppliedConfig = null;
 
     private ChatMarkdownWidget chatHistory;
     private Composite inputBlock;
@@ -347,6 +345,9 @@ public class AIChatView implements EclipseAiMonitor {
 
     private void applyConfig() {
         var config = LlmPreferenceInitializer.buildWithDefaults();
+        if (lastAppliedConfig != null && lastAppliedConfig.equals(config)) return;
+        lastAppliedConfig = config;
+        LOG.info("Set new config " + config);
         try {
             aiService.getSkillService().refresh(config.getSkillDirectory());
         } catch (IOException e) {
@@ -366,9 +367,6 @@ public class AIChatView implements EclipseAiMonitor {
         refreshStatusLine();
         reloadModelsIfNeeded(); // TODO this is miss leading - we do the same here again
         applyShellCommandConfirmation();
-
-        var prefs = InstanceScope.INSTANCE.getNode(PeonConstants.PLUGIN_ID);
-        debugLog.set(prefs.getBoolean(PeonConstants.PREF_LOG_RESPONSE, false));
     }
 
     private void applyMcpConfig() {
@@ -573,7 +571,6 @@ public class AIChatView implements EclipseAiMonitor {
             monitor.beginTask("Arbeit, Arbeit!", currentMode == PeonMode.AGENT ? ToolService.MAX_ITERATIONS * 2 : ToolService.MAX_ITERATIONS);
             monitorRef.set(monitor);
             Exception ex = null;
-            ChatResponse response = null;
             try {
                 active.setStandingOrders(StandingOrdersBuilder.build(
                         getSelectedFile(), 
@@ -582,7 +579,7 @@ public class AIChatView implements EclipseAiMonitor {
                         currentMode, 
                         aiService.getAgentMode()));
                 
-                response = active.call(text.isEmpty() ? null : text, this);
+                active.call(text.isEmpty() ? null : text, this);
             } catch (ToolExecutionException e) {
                 if (!isCanceled()) {
                     if (e.getCause() instanceof CancellationException) {
@@ -602,9 +599,6 @@ public class AIChatView implements EclipseAiMonitor {
                 monitor.done();
                 active.setStandingOrders(Collections.emptyList());
                 monitorRef.set(new NullProgressMonitor());
-            }
-            if (debugLog.get()) {
-                LOG.info("Peon AI Request:\n" + text + "\nResponse\n" + response);
             }
             return PeonConstants.status("Peon AI\n" + aiService.getConfig(), ex);
         }).schedule();

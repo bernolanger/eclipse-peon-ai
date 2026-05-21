@@ -102,7 +102,7 @@ public class EclipseWorkspaceReadFileTool extends AbstractEclipseTool {
 
     public static final String LIST_WORKSPACE_NAME = "listWorkspace";
     @Tool(name = LIST_WORKSPACE_NAME, value = "Eclipse: List workspace directory/projects (non-recursive). Empty path lists all projects.")
-    public String listWorkspac(
+    public String listWorkspace(
             @P(description = "workspace-relative path, e.g. '/MyProject/src'", required = false, name = "path") 
             String path) {
 
