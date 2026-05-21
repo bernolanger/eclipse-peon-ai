@@ -22,6 +22,7 @@ import org.sterl.llmpeon.parts.shared.JdtUtil;
 import org.sterl.llmpeon.parts.tools.AgentModeTool;
 import org.sterl.llmpeon.parts.tools.EclipseBuildTool;
 import org.sterl.llmpeon.parts.tools.EclipseCodeNavigationTool;
+import org.sterl.llmpeon.parts.tools.EclipseConsoleLogTool;
 import org.sterl.llmpeon.parts.tools.EclipseGrepTool;
 import org.sterl.llmpeon.parts.tools.EclipseRunTestTool;
 import org.sterl.llmpeon.parts.tools.EclipseWorkspaceReadFileTool;
@@ -125,6 +126,7 @@ public class PeonAiService {
         toolService.addTool(new EclipseGrepTool());
         toolService.addTool(new EclipseRunTestTool());
         toolService.addTool(new EclipseCodeNavigationTool());
+        toolService.addTool(new EclipseConsoleLogTool());
         toolService.addTool(new SkillTool(skillService));
 
         developerService = new AiDeveloperService(configuredModel, toolService, skillService, context);

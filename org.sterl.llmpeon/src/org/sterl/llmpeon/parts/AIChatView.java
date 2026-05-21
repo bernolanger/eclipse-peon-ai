@@ -90,21 +90,21 @@ public class AIChatView implements EclipseAiMonitor {
 
     private final AtomicReference<IProgressMonitor> monitorRef = new AtomicReference<>(new NullProgressMonitor());
     private final VoiceInputService voiceService = new VoiceInputService();
-    private boolean recording = false;
+    private volatile boolean recording = false;
 
-    private PeonMode currentMode = PeonMode.DEV;
+    private volatile PeonMode currentMode = PeonMode.DEV;
     
     private AtomicReference<LlmConfig> lastListedConfig = new AtomicReference<>();
-    private IProject currentProject;
-    private boolean projectPinned = false;
+    private volatile IProject currentProject;
+    private volatile boolean projectPinned = false;
 
     private ChatMarkdownWidget chatHistory;
     private Composite inputBlock;
     private UserInputWidget chatInput;
     private UserQuestionWidget questionWidget;
 
-    private ITextSelection textSelection;
-    private IResource selectedResource;
+    private volatile ITextSelection textSelection;
+    private volatile IResource selectedResource;
 
     private final IPreferenceChangeListener prefListener = event -> {
         EclipseUtil.runInUiThread(parent, this::applyConfig);
@@ -744,16 +744,16 @@ public class AIChatView implements EclipseAiMonitor {
 
     private String getUserSelection() {
         if (textSelection == null || StringUtil.hasNoValue(textSelection.getText())) return "";
-        var file = getSelectedFile();
+        var file = EclipseUtil.getOpenFile();
 
         var extension = "\n";
-        if (file != null) extension = file.getFileExtension() + "\n";
+        if (file.isPresent()) extension = file.get().getFileExtension() + "\n";
 
         String userIn = "\n\n```" + extension + textSelection.getText() + "\n```";
 
-        if (file != null) {
+        if (file.isPresent()) {
             userIn += "\n\nStart line: `" + (textSelection.getStartLine() + 1) + "`";
-            userIn += "\n\nFile: `" + JdtUtil.pathOf(file) + "`"
+            userIn += "\n\nFile: `" + JdtUtil.pathOf(file.get()) + "`"
                     + "\n\nUse tool `" + EclipseWorkspaceReadFileTool.READ_ECLIPSE_FILE_TOOL 
                     + "` only if more context is needed.";
         }
