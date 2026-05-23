@@ -318,10 +318,10 @@ public class PeonAiService implements MessageProvider {
     }
 
     public void setPeonMode(PeonMode mode) {
+        this.mode = mode;
         if (mode == PeonMode.AGENT) {
             getToolService().addTool(getAgentModeTools());
             getAgentMode().reset();
-            getAgentMode().setAutonomous(true);
             if (getAgentMode().overviewExists()) {
                 getAgentMode().getActiveService().addMessage(UserMessage.from(
                         "Existing plan found:\n\n" + getAgentMode().readOverview()));
