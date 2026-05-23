@@ -26,8 +26,10 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/' },
             { text: 'Agents & Skills', link: '/setup/agents-and-skills' },
-            { text: 'Template Variables', link: '/setup/template-variables' },
+            { text: 'Commands', link: '/setup/commands' },
             { text: 'Agent Mode', link: '/setup/agent-mode' },
+            { text: 'Memory', link: '/peon-memory' },
+            { text: 'Template Variables', link: '/setup/template-variables' },
         ]
     },
     {
