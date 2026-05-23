@@ -16,9 +16,11 @@ import org.sterl.llmpeon.shared.StringUtil;
 
 import dev.langchain4j.http.client.jdk.JdkHttpClient;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
+import dev.langchain4j.model.catalog.ModelType;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.googleai.GeminiThinkingConfig;
 import dev.langchain4j.model.googleai.GeminiThinkingConfig.GeminiThinkingLevel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiModelCatalog;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaModel;
@@ -146,6 +148,26 @@ public enum AiProvider {
                     .logRequests(c.isDebugMode())
                     .logResponses(c.isDebugMode())
                     .build();
+        }
+        
+        @Override
+        public List<AiModel> listAiModels(LlmConfig config) {
+            var models = GoogleAiGeminiModelCatalog.builder()
+                .apiKey(config.getApiKey())
+                .build()
+                .listModels()
+                .stream().filter(m -> m.type() == ModelType.CHAT || m.type() == ModelType.OTHER)
+                .toList();
+
+            var result = new ArrayList<AiModel>();
+            for (var m : models) {
+                result.add(AiModel.builder()
+                        .id(m.name())
+                        .name(m.displayName())
+                        .maxInputTokens(m.maxInputTokens())
+                        .build());
+            }
+            return result;
         }
     },
 
