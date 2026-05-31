@@ -131,11 +131,11 @@ public class EclipseUtil {
     }
     public static String projectInfo(IProject p) {
         final var result = new StringBuilder();
-        result.append("Project name: ").append(p.getName())
+        result.append("Project name:  ").append(p.getName())
               .append("\nEclipse path: ").append(JdtUtil.pathOf(p))
-              .append("\nDisk path: ").append(JdtUtil.diskPathOf(p))
-              .append("\nNatures: ").append(projectNatures(p));
-        
+              .append("\nDisk path:    ").append(JdtUtil.diskPathOf(p))
+              .append("\nNatures:      ").append(projectNatures(p));
+
         var m = findMember(p, "pom.xml");
         if (m.isPresent()) result.append(JdtUtil.pathOf(m.get()));
         m = findMember(p, "package.json");

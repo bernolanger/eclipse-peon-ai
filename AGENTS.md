@@ -7,6 +7,10 @@ AI changes only allowed here with user approval!
 - **Thread Safety**: All code changes must be thread-safe (`Atomic*` / `ReentrantLock`). No single-threaded assumptions.
 - **Testing Strategy**: See module guidelines below for runner specifics (Eclipse vs Shell).
 
+# Build
+- command line `mvn clean verify` - use `verify` to run the eclipse plugin tests of org.sterl.llmpeon.test
+- all other tests can be executed using the eclipse test tool runner
+
 # Module Guidelines (Links)
 
 Read these when working in specific modules:
@@ -20,7 +24,7 @@ Read these when working in specific modules:
 - org.sterl.llmpeon - eclipse plugin code
 - org.sterl.llmpeon.test - eclipse plugin tests
 
-## Dependency Management
+# Dependency Management
 
 - External JARsare copied to `lib/` via `maven-dependency-plugin`
 - `MANIFEST.MF` `Bundle-ClassPath`, `build.properties` `bin.includes`, and `.classpath` must all list the **same** JARs

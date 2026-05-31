@@ -7,7 +7,7 @@ import org.eclipse.jface.text.ITextSelection;
 import org.sterl.llmpeon.StandingOrdersBuilder.MessageProvider;
 import org.sterl.llmpeon.parts.shared.EclipseUtil;
 import org.sterl.llmpeon.parts.shared.JdtUtil;
-import org.sterl.llmpeon.parts.tools.EclipseWorkspaceReadFileTool;
+import org.sterl.llmpeon.shared.FileLines;
 import org.sterl.llmpeon.shared.StringUtil;
 
 public class UserContext implements MessageProvider {
@@ -40,13 +40,10 @@ public class UserContext implements MessageProvider {
         var extension = "\n";
         if (file.isPresent()) extension = file.get().getFileExtension() + "\n";
 
-        String userIn = "\n\n```" + extension + textSelection.getText() + "\n```";
+        String userIn = "\n\n```" + extension + FileLines.format(textSelection.getText(), textSelection.getStartLine() + 1) + "\n```";
 
         if (file.isPresent()) {
-            userIn += "\n\nStart line: `" + (textSelection.getStartLine() + 1) + "`";
-            userIn += "\n\nFile: `" + JdtUtil.pathOf(file.get()) + "`"
-                    + "\n\nUse tool `" + EclipseWorkspaceReadFileTool.READ_ECLIPSE_FILE_TOOL 
-                    + "` only if more context is needed.";
+            userIn += "\n\nFile: `" + JdtUtil.pathOf(file.get()) + "`";
         }
         return userIn;
     }

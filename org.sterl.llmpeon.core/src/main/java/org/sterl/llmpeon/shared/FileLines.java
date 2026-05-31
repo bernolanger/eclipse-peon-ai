@@ -9,12 +9,19 @@ public class FileLines {
      * Returns the full file content with 1-based line numbers prefixed.
      */
     public static String format(String content) {
-        var lineEnding = FileUtils.dominantLineEnding(content);
+        return format(content, 1);
+    }
+
+    /**
+     * Returns the file content with line numbers prefixed, starting from {@code startLine}.
+     */
+    public static String format(String content, int startLine) {
         if (content == null) return "";
+        var lineEnding = FileUtils.dominantLineEnding(content);
         var lines = content.split(lineEnding, -1);
         var sb = new StringBuilder();
         for (int i = 0; i < lines.length; i++) {
-            appendLine(sb, i + 1, lines[i], lineEnding);
+            appendLine(sb, startLine + i, lines[i], lineEnding);
         }
         return sb.toString();
     }
