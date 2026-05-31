@@ -8,7 +8,6 @@ import java.util.function.Predicate;
 
 import org.sterl.llmpeon.agent.AiCompressorAgent;
 import org.sterl.llmpeon.ai.ConfiguredModel;
-import org.sterl.llmpeon.ai.LlmConfig;
 import org.sterl.llmpeon.shared.AiMonitor;
 import org.sterl.llmpeon.shared.StringUtil;
 import org.sterl.llmpeon.streaming.StreamingBridge;
@@ -127,7 +126,7 @@ public abstract class AbstractChatService {
 
     public ChatResponse compressContext(AiMonitor monitor) {
         var response = new AiCompressorAgent(
-                    configuredModel.getChatModel(), configuredModel.getConfig().getDevTemperature() < 1.0 ? 0.1 : null)
+                    configuredModel.getChatModel(), configuredModel.getConfig().getDevTemperature() < 1.0 ? 0.2 : null)
                 .call(memory.messages(), monitor);
         memory.clear();
         memory.add(AiMessage.from("[Context summary]\n" + response.aiMessage().text()));
@@ -135,11 +134,6 @@ public abstract class AbstractChatService {
         return response;
     }
 
-    @Deprecated
-    public void updateConfig(LlmConfig config) {
-        configuredModel.updateConfig(config);
-    }
-    
     /**
      * Only context information which doesn't change - only if we clear!
      * Otherwise we kill the KV-cache!

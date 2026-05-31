@@ -1,6 +1,7 @@
 package org.sterl.llmpeon;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Disabled;
@@ -10,6 +11,7 @@ import org.sterl.llmpeon.ai.AiProvider;
 import org.sterl.llmpeon.ai.LlmConfig;
 
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.request.ChatRequest;
 
@@ -20,6 +22,14 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 @Tag("integration")
 public class BenchmarkTest {
 
+    private final SystemMessage system = SystemMessage.from("""
+            Response style:
+            - No preamble, no summary, no postamble
+            - Skip "I will...", "Here is...", "Based on...", "Done." intros and outros
+            - Answer directly; be concise — 1-4 lines unless detail is explicitly required
+            - Do not repeat what was already said in the conversation
+            - Remove every word that does not add meaning to keep the context small
+            """);
     private final String message = """
             Zähle mir die letzten 5 Bundeskanzler der Bundesrepublik Deutschland auf und nenne zudem kurz in einer Tabelle, wie lange diese regiert haben und ihre am meisten gefeierte Leistung während ihrer Regierungszeit.
             Heute ist
@@ -74,6 +84,7 @@ public class BenchmarkTest {
         // GIVEN
         var model = config.build();
         var messages = new ArrayList<ChatMessage>();
+        messages.add(system);
         
         messages.add(UserMessage.from("ping - return pong!"));
         var result = model.callBlocking(ChatRequest.builder().messages(messages).build(), null);
@@ -86,8 +97,9 @@ public class BenchmarkTest {
         result = model.callBlocking(ChatRequest.builder().messages(UserMessage.from(message)).build(), null);
         messages.add(result.aiMessage());
         token += result.tokenUsage().totalTokenCount();
-        
-        result = model.callBlocking(ChatRequest.builder().messages(UserMessage.from("Are you sure?")).build(), null);
+
+        System.out.println("Sending question");
+        result = model.callBlocking(ChatRequest.builder().messages(UserMessage.from("Are you sure - add the age. Today is " + LocalDate.now())).build(), null);
         token += result.tokenUsage().totalTokenCount();
         messages.add(result.aiMessage());
 

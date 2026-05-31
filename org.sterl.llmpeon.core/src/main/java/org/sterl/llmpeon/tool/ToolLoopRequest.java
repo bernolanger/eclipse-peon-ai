@@ -20,6 +20,10 @@ import dev.langchain4j.model.chat.response.ChatResponse;
  * 
  * Keep in mind any change to the message history may kill the kv cache!!
  * https://github.com/sterlp/eclipse-peon-ai/issues/60
+ * 
+ * See also:
+ * https://github.com/ggml-org/llama.cpp/issues/22746
+ * https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-4586088278
  */
 public class ToolLoopRequest {
 
@@ -29,7 +33,7 @@ public class ToolLoopRequest {
     public final StreamingBridge bridge;
 
     /** static messages which do not change */
-    public List<? extends ChatMessage> staticMessages = List.of();
+    public List<ChatMessage> staticMessages = List.of();
     public AiMonitor monitor = AiMonitor.NULL_MONITOR;
     public Predicate<SmartToolExecutor> toolFilter = t -> true;
     public boolean includeMcpTools = true;
@@ -46,7 +50,7 @@ public class ToolLoopRequest {
      * Pure static messages which never change
      * Keep in mind any change to the message history may kill the kv cache!! 
      */
-    public ToolLoopRequest staticMessages(List<? extends ChatMessage> staticMessages) {
+    public ToolLoopRequest staticMessages(List<ChatMessage> staticMessages) {
         this.staticMessages = staticMessages;
         return this;
     }

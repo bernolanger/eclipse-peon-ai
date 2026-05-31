@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ToolService {
 
+    private static final int MAX_STUCK_ITERATIONS = 10;
     private final Map<String, SmartToolExecutor> toolExecutors = new ConcurrentHashMap<>();
 
     private McpService mcpService;
@@ -88,17 +89,18 @@ public class ToolService {
 
         int iterations = 0;
         boolean shouldLoop = true;
+        int stuck = 0;
 
         do {
-            var messages = new ArrayList<ChatMessage>(req.staticMessages);
+            var messages = new ArrayList<ChatMessage>(toOneSystemMessage(req.staticMessages));
             messages.addAll(req.memory.messages());
 
             var builder = ChatRequest.builder()
-                    .messages(toOneSystemMessage(messages))
+                    .messages(messages)
                     .toolSpecifications(toolSpecifications(req));
             if (req.temperature != null) builder.temperature(req.temperature);
 
-            req.monitor.onChatMessage(iterations + 1, builder);
+            req.monitor.onChatMessage(++iterations, builder);
             response = req.bridge.call(req.chatModel, builder.build(), req.monitor);
             req.memory.add(response.aiMessage());
             ToSimpleMessage.INSTANCE.convert(response.aiMessage()).forEach(req.monitor::onChatResponse);
@@ -112,6 +114,7 @@ public class ToolService {
             if (shouldLoop) req.onLoop.accept(response);
 
             if (isToolrequest) {
+                stuck = 0; // reset on productive tool use
                 var tR = runAllTools(response, req.chatModel, req.monitor, req.memory.messages());
                 if (tR.clearMemory()) {
                     req.memory.clear();
@@ -123,8 +126,13 @@ public class ToolService {
                 break; // done
             } else if (hasThink) {
                 // https://github.com/langchain4j/langchain4j/issues/4786
-                req.monitor.onProblem("AI hangs - only thinking returned");
-                req.memory.add(new UserMessage("You are only thinking - ask a question or if you are stuck!"));
+                ++stuck;
+                req.monitor.onProblem("AI hangs - only thinking returned times: " + stuck);
+                if (stuck > MAX_STUCK_ITERATIONS) break;
+                req.memory.add(new UserMessage("Your last response contained only internal reasoning with no output. " +
+                                "Stop thinking and take action now: either call a tool, ask a clarifying question, " +
+                                "or provide your answer directly."
+                            ));
             }
         } while (shouldLoop && !req.monitor.isCanceled());
 

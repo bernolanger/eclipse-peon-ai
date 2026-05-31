@@ -121,11 +121,7 @@ public class PeonAiService implements MessageProvider {
         
         diskFileWriteTool = new DiskFileWriteTool(rootPath);
         diskFileReadTool  = new DiskFileReadTool(rootPath);
-        diskGrepTool  = new DiskGrepTool(rootPath);
-        
-        updateActiveDiskTools(configuredModel.getConfig());
-
-        toolService.addTool(new CompactSessionTool(configuredModel.getConfig().getDevTemperature() < 1.0 ? 0.1 : null));
+        diskGrepTool      = new DiskGrepTool(rootPath);
         
         toolService.addTool(new EclipseBuildTool());
         toolService.addTool(new EclipseGrepTool());
@@ -144,38 +140,10 @@ public class PeonAiService implements MessageProvider {
         agentModeTool = new AgentModeTool(agentMode);
 
         mcpConnectionService = new McpConnectionService(toolService, mcpStateChange);
+
+        updateConfig(configuredModel.getConfig());
     }
     
-    public AbstractChatService getActiveService() {
-        return switch (getPeonMode()) {
-            case DEV   -> getDeveloperService();
-            case PLAN  -> getPlannerService();
-            case AGENT -> getAgentMode().getActiveService();
-        };
-    }
-
-    /**
-     * Updates the active project across all project-aware services.
-     * Safe to call from any thread — each downstream setter manages its own state.
-     */
-    public void setProject(IProject project) {
-        currentProject.set(project);
-        agentsMdService.load(project);
-        agentMode.setProject(project);  // volatile write inside AgentModeService
-
-        var projectPath = JdtUtil.pathOf(project);
-
-        workspaceWriteFilesTool.setCurrentProject(project);
-
-        // disk tools work with the disk path not eclipse path
-        projectPath = JdtUtil.diskPathOf(project);
-        if (projectPath != null) {
-            diskFileWriteTool.setWorkingDir(projectPath);
-            diskFileReadTool.setWorkingDir(projectPath);
-            diskGrepTool.setWorkingDir(projectPath);
-        }
-    }
-
     /**
      * Propagates a new {@link LlmConfig} to all chat services and refreshes skills.
      * Safe to call from any thread.
@@ -183,11 +151,7 @@ public class PeonAiService implements MessageProvider {
     public void updateConfig(LlmConfig config) {
         configuredModel.updateConfig(config);
 
-        developerService.updateConfig(config);
-        plannerService.updateConfig(config);
-        agentMode.updateConfig(config);
-
-        toolService.replaceTool(new CompactSessionTool(configuredModel.getConfig().getDevTemperature() < 1.0 ? 0.1 : null));
+        toolService.replaceTool(new CompactSessionTool(config.getDevTemperature() < 1.0 ? 0.1 : null));
 
         updateActiveDiskTools(config);
         if (config.getSkillDirectory() != null && !config.getSkillDirectory().isBlank()) {
@@ -217,6 +181,36 @@ public class PeonAiService implements MessageProvider {
                 toolService.removeTool(diskFileReadTool);
                 toolService.removeTool(diskGrepTool);
             }
+        }
+    }
+    
+    public AbstractChatService getActiveService() {
+        return switch (getPeonMode()) {
+            case DEV   -> getDeveloperService();
+            case PLAN  -> getPlannerService();
+            case AGENT -> getAgentMode().getActiveService();
+        };
+    }
+
+    /**
+     * Updates the active project across all project-aware services.
+     * Safe to call from any thread — each downstream setter manages its own state.
+     */
+    public void setProject(IProject project) {
+        currentProject.set(project);
+        agentsMdService.load(project);
+        agentMode.setProject(project);  // volatile write inside AgentModeService
+
+        var projectPath = JdtUtil.pathOf(project);
+
+        workspaceWriteFilesTool.setCurrentProject(project);
+
+        // disk tools work with the disk path not eclipse path
+        projectPath = JdtUtil.diskPathOf(project);
+        if (projectPath != null) {
+            diskFileWriteTool.setWorkingDir(projectPath);
+            diskFileReadTool.setWorkingDir(projectPath);
+            diskGrepTool.setWorkingDir(projectPath);
         }
     }
 

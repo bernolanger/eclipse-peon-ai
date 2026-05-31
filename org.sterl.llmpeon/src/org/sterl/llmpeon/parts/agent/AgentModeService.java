@@ -10,13 +10,11 @@ import org.eclipse.swt.widgets.Display;
 import org.sterl.llmpeon.AbstractChatService;
 import org.sterl.llmpeon.AiDeveloperService;
 import org.sterl.llmpeon.AiPlannerService;
-import org.sterl.llmpeon.ai.LlmConfig;
 import org.sterl.llmpeon.parts.shared.JdtUtil;
 import org.sterl.llmpeon.parts.tools.AgentModeTool;
 import org.sterl.llmpeon.parts.tools.EclipseWorkspaceReadFileTool;
 import org.sterl.llmpeon.shared.AiMonitor;
 
-import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.response.ChatResponse;
 
@@ -109,12 +107,6 @@ public class AgentModeService {
         orders.add(phase == Phase.PLANNING ? plannerAgentMessage() : developerAgentMessage());
         service.setUserContextInformations(orders);
         return service.call(message, monitor);
-    }
-
-    @Deprecated
-    public void updateConfig(LlmConfig config) {
-        plannerService.updateConfig(config);
-        developerService.updateConfig(config);
     }
 
     public void setAutonomous(boolean autonomous) {

@@ -412,7 +412,7 @@ public class AIChatView implements EclipseAiMonitor {
         chatInput.setVoiceInputVisible(VoicePreferenceInitializer.buildWithDefaults().enabled());
         syncAgentsMdToggle();
         refreshStatusLine();
-        reloadModelsIfNeeded(); // TODO this is miss leading - we do the same here again
+        reloadModelsIfNeeded();
         applyShellCommandConfirmation();
     }
 

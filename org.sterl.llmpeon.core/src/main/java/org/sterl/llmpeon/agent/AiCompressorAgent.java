@@ -24,9 +24,6 @@ public class AiCompressorAgent {
     
     private final Double temperature;
 
-    public AiCompressorAgent(StreamingChatModel chatModel) {
-        this(chatModel, null);
-    }
     /**
      * Not every model supports a different temperature -- leave empty to use model defaults.
      */
