@@ -44,7 +44,7 @@ public class BenchmarkTest {
     @Test
     void benchmark_llama() {
         runTest(LlmConfig.newConfig(AiProvider.OPEN_AI, 
-                "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-IQ4_XS.gguf", "http://0.0.0.0:19999"));
+                "Qwen3.6-27B-Uncensored-HauhauCS-Balanced-IQ4_XS.gguf", "http://0.0.0.0:1234"));
     }
     
     /**

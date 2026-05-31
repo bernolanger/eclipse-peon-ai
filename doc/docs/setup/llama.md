@@ -28,27 +28,41 @@ Placeholders used:
 
 ### Start Server (OpenAI-compatible API)
 
+Here a `Qwen3.6-27B` sample
+
+
 (ngl -1 we load all layers info VRAM)
 
 ```bat
 llama-server.exe ^
   -m MODEL ^
-  -ngl -1 ^
-  -c 95000 ^
+    -ngl -1 ^
+  -c 50000 ^
   -fa on ^
   --cache-type-k q8_0 ^
   --cache-type-v q8_0 ^
-  --parallel 1 ^
+  --kv-unified ^
+  --parallel 2 ^
   --temp 0.6 ^
   --top-p 0.95 ^
   --top-k 20 ^
   --host 0.0.0.0 ^
+  --batch-size 256 ^
+  --cache-prompt ^
+  --ctx-checkpoints 64 ^
+  --chat-template-kwargs "{\"preserve_thinking\": true}" ^
   --cache-reuse 256 ^
   --jinja ^
   --port PORT
 ```
 
 The server exposes an OpenAI-compatible API at `http://localhost:PORT/v1`. The built-in chat UI is available at `http://localhost:PORT`.
+
+Not used in Qwen
+```
+  --context-shift ^
+  --swa-full ^
+```
 
 > On the RX 7900 XT with IQ4_XS and `-c 95000`, the model uses ~16.8 GB VRAM leaving ~2.7 GB free headroom.
 
