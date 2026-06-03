@@ -251,6 +251,9 @@ public enum AiProvider {
                     .timeout(TIMEOUT)
                     .modelName(c.getModel())
                     .apiKey(c.getApiKey());
+            if (c.getUrl() != null && c.getUrl().length() > 4) {
+                builder.baseUrl(c.getUrl());
+            }
             if (c.isThinkingEnabled()) {
                 builder.thinkingType("enabled");
             }
