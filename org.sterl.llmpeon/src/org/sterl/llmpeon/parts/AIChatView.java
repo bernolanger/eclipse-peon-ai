@@ -570,7 +570,7 @@ public class AIChatView implements EclipseAiMonitor {
         if (active.getMessages().isEmpty()) return;
         lockWhileWorking(true);
         Job.create("Compressing context", monitor -> {
-            monitor.beginTask("Compressing chat", IProgressMonitor.UNKNOWN);
+            monitor.beginTask("Compressing chat", 1);
             monitorRef.set(monitor);
             Exception ex = null;
             try {
@@ -579,10 +579,10 @@ public class AIChatView implements EclipseAiMonitor {
             } catch (Exception e) {
                 ex = e;
             } finally {
+                monitor.done();
                 monitorRef.set(new NullProgressMonitor());
                 EclipseUtil.runInUiThread(parent, () -> lockWhileWorking(false));
             }
-            monitor.done();
             return PeonConstants.status("Compressed", ex);
         }).schedule();
     }
@@ -642,9 +642,9 @@ public class AIChatView implements EclipseAiMonitor {
                 if (lastAppliedConfig != null && lastAppliedConfig.isDebugMode()) {
                     LOG.info("Chatreponse: " + (cr == null ? "null" : cr.aiMessage()));
                 }
-                EclipseUtil.runInUiThread(parent, () -> lockWhileWorking(false));
                 monitor.done();
                 monitorRef.set(new NullProgressMonitor());
+                EclipseUtil.runInUiThread(parent, () -> lockWhileWorking(false));
             }
             return PeonConstants.status("Peon AI\n" + aiService.getConfig(), ex);
         }).schedule();
@@ -665,6 +665,7 @@ public class AIChatView implements EclipseAiMonitor {
     }
 
     private void lockWhileWorking(boolean value) {
+        if (parent == null || parent.isDisposed()) return;
         actionsBar.lockWhileWorking(value);
         chatInput.setWorking(value);
         if (!value) chatHistory.hideLiveStatus();
