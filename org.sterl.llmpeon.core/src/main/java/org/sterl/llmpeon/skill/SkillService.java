@@ -83,28 +83,36 @@ public class SkillService {
             try (DirectoryStream<Path> entries = Files.newDirectoryStream(skillsDirectory)) {
                 for (Path entry : entries) {
                     if (Files.isDirectory(entry)) {
-                        var skillFile = detectSkillFile(entry);
-                        if (skillFile != null && Files.isRegularFile(skillFile)) {
-                            SkillPromptFile skill = PromptYmlParser.parseSkill(skillFile);
-                            if (skill != null) {
-                                skills.put(skill.getName().toLowerCase(Locale.ROOT), skill);
-                            }
-                        }
+                        handleDirectorySkill(entry);
                     } else if (Files.isRegularFile(entry)) {
-                        var fileName = entry.getFileName().toString();
-                        if (fileName.startsWith(".")) continue;
-                        if (fileName.endsWith(".md")) {
-                            SkillPromptFile skill = PromptYmlParser.parseSkill(entry);
-                            if (skill != null) {
-                                skills.put(skill.getName().toLowerCase(Locale.ROOT), skill);
-                            }
-                        }
+                        handleFileSkill(entry);
                     }
                 }
             }
         }
 
         return true;
+    }
+    
+    private void handleFileSkill(Path entry) throws IOException {
+        var yml = PromptYmlParser.parseYml(entry);
+        if (yml != null) {
+            var skill = SkillPromptFile.from(yml).build();
+            skills.put(skill.getName().toLowerCase(Locale.ROOT), skill);
+        }
+    }
+
+    private void handleDirectorySkill(Path entry) throws IOException {
+        var skillFile = detectSkillFile(entry);
+        if (skillFile != null && Files.isRegularFile(skillFile)) {
+            var yml = PromptYmlParser.parseYml(skillFile);
+            if (yml != null) {
+                var skill = SkillPromptFile.from(yml)
+                        .skillDir(entry.getParent())
+                        .build();
+                skills.put(skill.getName().toLowerCase(Locale.ROOT), skill);
+            }
+        }
     }
 
     private Path detectSkillFile(Path dir) {

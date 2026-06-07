@@ -1,30 +1,32 @@
-package org.sterl.llmpeon.shared;
+package org.sterl.llmpeon.shared.model;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @RequiredArgsConstructor
-public abstract class AbstractPromptFile {
+@SuperBuilder(toBuilder = true)
+public class SimplePromptFile {
 
-    private final String name;
-    private final String description;
-    private final Path promptFile;
-    private volatile boolean enabled = true;
+    protected final String name;
+    protected final String description;
+    protected final Path promptFile;
+    @Default
+    protected volatile boolean enabled = true;
     
     StringBuilder info;
     public String buildShortInfo() {
         if (info == null) {
             info = new StringBuilder();
             info.append("---\nname: ").append(name)
-                .append("\ndescription: " + description);
+                .append("\ndescription: ").append(description);
         }
         return info.toString();
     }
@@ -54,9 +56,26 @@ public abstract class AbstractPromptFile {
     }
 
     public String readBody() {
-        return PromptYmlParser.stripFrontmatter(readFullContent());
+        return stripFrontmatter(readFullContent());
     }
 
+    
+    public static String stripFrontmatter(String raw) {
+        if (raw == null || raw.isBlank()) return raw;
+
+        raw = raw.strip();
+        if (!raw.startsWith("---")) return raw;
+
+        int first = raw.indexOf("---");
+        if (first == -1) return raw;
+
+        int second = raw.indexOf("\n---", first + 3); // Second --- must be after newline
+        if (second == -1) return raw;
+
+        int afterSecond = raw.indexOf('\n', second + 1);
+        return afterSecond == -1 ? "" : raw.substring(afterSecond).trim();
+    }
+    
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[name=" + name + ", promptFile: " + promptFile + "]";

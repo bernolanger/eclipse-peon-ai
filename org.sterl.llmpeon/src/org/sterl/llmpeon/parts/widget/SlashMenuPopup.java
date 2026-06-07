@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.sterl.llmpeon.shared.AbstractPromptFile;
+import org.sterl.llmpeon.shared.model.SimplePromptFile;
 import org.sterl.llmpeon.skill.SkillPromptFile;
 
 /**
@@ -39,17 +39,17 @@ public class SlashMenuPopup {
     private static final int MAX_WIDTH = 520;
 
     private final Composite anchor;
-    private final Consumer<AbstractPromptFile> onSelect;
+    private final Consumer<SimplePromptFile> onSelect;
     private final Listener anchorShellMoveListener;
     private final Shell anchorShell;
 
     private Shell popup;
     private Table table;
-    private List<AbstractPromptFile> filtered = List.of();
-    private List<AbstractPromptFile> source = List.of();
+    private List<SimplePromptFile> filtered = List.of();
+    private List<SimplePromptFile> source = List.of();
     private String currentPrefix = "";
 
-    public SlashMenuPopup(Composite anchor, Consumer<AbstractPromptFile> onSelect) {
+    public SlashMenuPopup(Composite anchor, Consumer<SimplePromptFile> onSelect) {
         this.anchor = anchor;
         this.onSelect = onSelect;
         this.anchorShell = anchor.getShell();
@@ -80,7 +80,7 @@ public class SlashMenuPopup {
      * @param prefix       prefix already typed after the slash, may be empty
      * @param anchorScreen anchor position in display coordinates (typically the caret location)
      */
-    public void show(List<AbstractPromptFile> commands, String prefix, Point anchorScreen) {
+    public void show(List<SimplePromptFile> commands, String prefix, Point anchorScreen) {
         this.source = commands == null ? List.of() : commands;
         this.currentPrefix = prefix == null ? "" : prefix;
         var matches = filter(this.source, this.currentPrefix);
@@ -205,7 +205,7 @@ public class SlashMenuPopup {
         popup.setBounds(bounds);
     }
 
-    private static List<AbstractPromptFile> filter(List<AbstractPromptFile> source, String prefix) {
+    private static List<SimplePromptFile> filter(List<SimplePromptFile> source, String prefix) {
         if (prefix == null || prefix.isEmpty()) return source;
         var lower = prefix.toLowerCase(Locale.ROOT);
         return source.stream()

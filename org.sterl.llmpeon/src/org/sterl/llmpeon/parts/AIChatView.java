@@ -56,9 +56,9 @@ import org.sterl.llmpeon.parts.widget.StatusLineWidget;
 import org.sterl.llmpeon.parts.widget.StatusLineWidget.SkillMenuSelection;
 import org.sterl.llmpeon.parts.widget.UserInputWidget;
 import org.sterl.llmpeon.parts.widget.UserQuestionWidget;
-import org.sterl.llmpeon.shared.AbstractPromptFile;
 import org.sterl.llmpeon.shared.OnPartialAiResponse;
 import org.sterl.llmpeon.shared.StringUtil;
+import org.sterl.llmpeon.shared.model.SimplePromptFile;
 import org.sterl.llmpeon.tool.model.SimpleMessage;
 import org.sterl.llmpeon.tool.model.SimpleMessage.Type;
 import org.sterl.llmpeon.tool.tools.ShellTool;
@@ -185,13 +185,16 @@ public class AIChatView implements EclipseAiMonitor {
         var dateInfo = "Today: " + LocalDate.now() 
                 + " — APIs and libraries may have changed since your training cutoff. "
                 + "Don't rely only on internal API knowledge — explore base classes and libs if possible with e.g. using "
-                + EclipseCodeNavigationTool.GET_TYPE_SOURCE + " for java.";
+                + EclipseCodeNavigationTool.GET_TYPE_SOURCE + " for java."
+                + "\nos.name: " + System.getProperty("os.name")
+                + "\nos file.separator: '" + System.getProperty("file.separator") + "'"
+                + "\nos line.separator: '" + System.lineSeparator() + "'";
 
         aiService.getDeveloperService().setStaticContext(Arrays.asList(SystemMessage.from(dateInfo)));
         aiService.getPlannerService().setStaticContext(Arrays.asList(SystemMessage.from(dateInfo)));
 
         chatInput.enableSlashCommands(() -> {
-            var result = new ArrayList<AbstractPromptFile>();
+            var result = new ArrayList<SimplePromptFile>();
             result.addAll(aiService.getCommandService().getCommands());
             result.addAll(aiService.getSkillService().getSkills());
             return result;

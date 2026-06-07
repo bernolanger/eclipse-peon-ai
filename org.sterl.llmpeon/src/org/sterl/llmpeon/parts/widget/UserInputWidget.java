@@ -16,7 +16,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.sterl.llmpeon.parts.shared.ImageUtil;
 import org.sterl.llmpeon.parts.shared.SwtUtil;
-import org.sterl.llmpeon.shared.AbstractPromptFile;
+import org.sterl.llmpeon.shared.model.SimplePromptFile;
 
 /**
  * User input area: file chips bar (hidden until files attached), auto-resizing
@@ -36,13 +36,13 @@ public class UserInputWidget extends Composite {
     private final Image micImage;
     private final Image sendImage;  // shared registry — must NOT be disposed
     private final Image stopImage;
-    private boolean working = false;
+    private volatile boolean working = false;
     private final Runnable onMicClick;
 
     private final Color colorRecording;
 
     private SlashMenuPopup slashPopup;
-    private Supplier<List<AbstractPromptFile>> commandSupplier;
+    private Supplier<List<SimplePromptFile>> commandSupplier;
 
     public UserInputWidget(Composite parent, int style, Runnable onSend, Runnable onStop, Runnable onMicClick) {
         super(parent, style);
@@ -233,7 +233,7 @@ public class UserInputWidget extends Composite {
      * Enables the slash-command popup. {@code commandSupplier} returns the currently loaded
      * commands. Pass {@code null} to disable the popup.
      */
-    public void enableSlashCommands(Supplier<List<AbstractPromptFile>> commandSupplier) {
+    public void enableSlashCommands(Supplier<List<SimplePromptFile>> commandSupplier) {
         this.commandSupplier = commandSupplier;
         if (commandSupplier == null) {
             disposeSlashPopup();
@@ -274,7 +274,7 @@ public class UserInputWidget extends Composite {
         return sb.toString();
     }
 
-    private void applyCommandSelection(AbstractPromptFile cmd) {
+    private void applyCommandSelection(SimplePromptFile cmd) {
         String replacement = "/" + cmd.name() + " ";
         textInput.setText(replacement);
         textInput.setCaretOffset(replacement.length()); // cursor after the space

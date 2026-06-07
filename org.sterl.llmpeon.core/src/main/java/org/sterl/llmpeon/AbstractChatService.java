@@ -42,7 +42,6 @@ public abstract class AbstractChatService {
     protected final ToolService toolService;
     
     private final List<ChatMessage> staticContext = new ArrayList<>();
-    // TODO needs re-thinking
     private final List<String> userContextInformations = new ArrayList<>();
     private volatile int contextTokenSize = 0;
 
