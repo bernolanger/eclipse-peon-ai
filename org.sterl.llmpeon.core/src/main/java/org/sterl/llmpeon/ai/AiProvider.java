@@ -182,9 +182,10 @@ public enum AiProvider {
             // the thought_signature is not re-sent with tool results -> INVALID_ARGUMENT error.
             result.returnThinking(Boolean.TRUE).sendThinking(Boolean.TRUE);
             if (c.isThinkingEnabled()) {
-                result.thinkingConfig(GeminiThinkingConfig.builder()
-                        .thinkingLevel(GeminiThinkingLevel.HIGH)
-                        .build());
+                var think = GeminiThinkingConfig.builder()
+                    .thinkingLevel(GeminiThinkingLevel.HIGH)
+                    .thinkingBudget(c.getMaxTokens() > 0 ? c.getMaxTokens() / 2 : 2048);
+                result.thinkingConfig(think.build());
             } else {
                 result.thinkingConfig(GeminiThinkingConfig.builder()
                         .thinkingBudget(0)
@@ -266,7 +267,16 @@ public enum AiProvider {
                 builder.maxTokens(c.getMaxTokens());
             }
             if (c.isThinkingEnabled()) {
-                builder.thinkingType("enabled");
+                var model = c.getModel() == null ? "" : c.getModel();
+                var adaptive = model.contains("opus-4-8")
+                            || model.contains("opus-4-7")
+                            || model.contains("mythos");
+                if (adaptive) {
+                    builder.thinkingType("adaptive");
+                } else {
+                    builder.thinkingType("enabled")
+                           .thinkingBudgetTokens(c.getMaxTokens() > 0 ? c.getMaxTokens() / 2 : 2048);
+                }
             }
             return builder
                     .customHeaders(c.getHeaderParams())
