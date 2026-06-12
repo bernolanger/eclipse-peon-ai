@@ -1,6 +1,8 @@
 # Spec driven development
-The `doc/docs/design` contains the application design. The `HOW` 
-AI changes only allowed here with user approval!
+The `doc/docs/design` contains the application design. The `HOW`. use this as a system reference.
+The other `doc/docs` folder contain the user documentation.
+
+During the plan mode always plan also an update to the design and documentation.
 
 # Global Rules
 

@@ -40,6 +40,22 @@ public abstract class AbstractTest {
                 value.contains(expected));
     }
     
+    public static void assertHasNoUserMessageWith(Collection<ChatMessage> messages, String content) {
+        var textMessages = messages.stream()
+            .filter(m -> m instanceof UserMessage)
+            .map(m -> ((UserMessage)m).singleText())
+            .toList();
+        
+        assertHasNoMessageWith(textMessages, content);
+    }
+    
+    public static void assertHasNoMessageWith(Collection<String> textMessages, String content) {
+        var match = textMessages.stream().filter(m -> m.contains(content)).findAny();
+        assertTrue("Found match: \n" + content
+                + "\nin:\n" + match.orElse(null), 
+                match.isEmpty());
+    }
+    
     public static void assertIsEmpty(Optional<?> v) {
         assertTrue("Expected optional to has a value", v.isEmpty());
     }

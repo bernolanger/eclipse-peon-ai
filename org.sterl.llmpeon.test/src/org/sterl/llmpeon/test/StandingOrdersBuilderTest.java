@@ -1,18 +1,16 @@
 package org.sterl.llmpeon.test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
-
+import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.internal.core.util.SimpleDocument;
+import org.eclipse.jface.text.TextSelection;
 import org.junit.Test;
 import org.sterl.llmpeon.StandingOrdersBuilder;
 import org.sterl.llmpeon.parts.PeonAiService;
 import org.sterl.llmpeon.parts.model.UserContext;
+import org.sterl.llmpeon.parts.shared.EclipseUtil;
 import org.sterl.llmpeon.parts.shared.JdtUtil;
-
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.UserMessage;
 
 public class StandingOrdersBuilderTest extends AbstractTest {
     @Test
@@ -53,27 +51,36 @@ public class StandingOrdersBuilderTest extends AbstractTest {
         assertHasMessageWith(messages, " null");
     }
     
-    public static void assertHasUserMessageWith(Collection<ChatMessage> messages, String content) {
-        var textMessages = messages.stream()
-            .filter(m -> m instanceof UserMessage)
-            .map(m -> ((UserMessage)m).singleText())
-            .toList();
+    @Test
+    public void test_file_selection_with_text_range() {
+        // GIVEN - selected file is pom.xml with text selection lines 1-2
+        var userContext = new UserContext();
+        var standingOrders = new StandingOrdersBuilder()
+                .add(userContext);
+
+        userContext.setCurrentProject(project);
+        // AND
+        var pomResource = project.findMember("pom.xml");
+        assertNotNull(pomResource);
+        EclipseUtil.openInEditor((IFile)pomResource);
+        // AND
+        var doc = new SimpleDocument("Hallo von Paul - das sollten wir nicht sehen");
+        var mockTextSelection = new TextSelection(doc, 0, doc.getLength());
+        userContext.setTextSelection(mockTextSelection);
         
-        var match = textMessages.stream().filter(m -> m.contains(content)).findAny();
-        assertTrue("Could not find: \n" + content
-                + "\nin:\n" + textMessages.stream().collect(Collectors.joining("\n")), 
-                match.isPresent());
-    }
-    
-    public static void assertHasNoUserMessageWith(Collection<ChatMessage> messages, String content) {
-        var textMessages = messages.stream()
-            .filter(m -> m instanceof UserMessage)
-            .map(m -> ((UserMessage)m).singleText())
-            .toList();
+        // WHEN
+        var messages = standingOrders.build();
         
-        var match = textMessages.stream().filter(m -> m.contains(content)).findAny();
-        assertTrue("Found match: \n" + content
-                + "\nin:\n" + match.orElse(null), 
-                match.isEmpty());
+        // THEN - should contain path to pom.xml
+        assertHasMessageWith(messages, "pom.xml");
+        
+        // AND start marker <project should be present (line 1)
+        assertHasMessageWith(messages, "<project");
+        
+        // AND end marker </project> should be present
+        assertHasMessageWith(messages, "</project>");
+        
+        // AND
+        assertHasNoMessageWith(messages, "das sollten wir nicht sehen");
     }
 }

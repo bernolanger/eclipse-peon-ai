@@ -7,19 +7,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.text.templates.TemplateContext;
 import org.sterl.llmpeon.StandingOrdersBuilder.MessageProvider;
 import org.sterl.llmpeon.parts.shared.EclipseUtil;
 import org.sterl.llmpeon.parts.shared.JdtUtil;
 
-import dev.langchain4j.data.message.AiMessage;
-
 public class AgentsMdService implements MessageProvider {
-
-    private static final String HEADER = 
-            "%s\n" +
-            "Use this file for critical, non-obvious, always-needed project settings — like workspace memory, but scoped to this project. Edit it directly. Keep it very short, and update or clean up entries as work evolves so only current, relevant rules remain.\n" +
-            "---\n";
 
     private IProject project;
     private final AtomicReference<IFile> agentsMd = new AtomicReference<>();
@@ -31,7 +23,7 @@ public class AgentsMdService implements MessageProvider {
         var f = agentsMd.get();
         try {
             var text = f.readString();
-            return String.format(HEADER, JdtUtil.pathOf(f)) + " full content:\n" + text;
+            return  JdtUtil.pathOf(f) + " full content:\n" + text;
         } catch (CoreException e) {
             throw new RuntimeException(e);
         }
@@ -55,20 +47,6 @@ public class AgentsMdService implements MessageProvider {
         agentsMd.set(resolveFile().orElse(null));
 
         return hasAgentFile();
-    }
-
-    /** Returns a processed {@link AiMessage} with path header when enabled and file present, empty otherwise. */
-    public Optional<AiMessage> agentMessage(TemplateContext context) {
-        IFile file = agentsMd.get();
-        if (file == null || !enabled.get()) return Optional.empty();
-        String content;
-        try {
-            content = file.readString();
-        } catch (CoreException e) {
-            throw new RuntimeException("Failed to read " + file, e);
-        }
-        String fullText = String.format(HEADER, JdtUtil.pathOf(file)) + " content:\n" + content;
-        return Optional.of(AiMessage.from(fullText));
     }
 
     /** Returns the discovered agent filename (e.g. "AGENTS.md"), or <code>null</code> if none found or not avtive. */

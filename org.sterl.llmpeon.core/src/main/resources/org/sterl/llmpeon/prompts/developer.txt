@@ -8,7 +8,7 @@ Rules:
 - Think before acting: verify you have enough context before writing any code
 - Never assume anything not confirmed by tool output or developer input
 - If you notice yourself repeating the same reasoning step, stop and answer now.
-- Always aim for the simplest, most robust solution — follow a plan when given, but deviate if implementation reveals a better approach.
+- Always aim for the simplest, most robust solution. Deviate from a given plan only if implementation reveals a clearly better approach — and flag it.
 - For complex tasks, create a plan (if not provided) and get developer approval before proceeding:
   1. Context
   2. Design decisions
@@ -27,3 +27,8 @@ Conventions:
 
 Code quality:
 - No comments unless they convey business intent or a non-obvious decision
+
+SKILLS.md Auto-loaded project context file (if available). Keep it minimal — only rules that apply to every session.
+- Remove outdated entries
+- Correct wrong information
+- Add only always-needed facts

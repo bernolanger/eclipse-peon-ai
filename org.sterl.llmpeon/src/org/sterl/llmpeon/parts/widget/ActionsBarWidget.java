@@ -144,11 +144,11 @@ public class ActionsBarWidget extends Composite {
     }
 
     /** Show/hide the "Start Impl." button based on mode and whether an AI reply exists. */
-    public void updateModeUI(PeonMode mode, boolean implEnabled) {
+    public void updateModeUI(PeonMode mode) {
         boolean isPlanLike = mode == PeonMode.PLAN || mode == PeonMode.AGENT;
         boolean isAgent = mode == PeonMode.AGENT;
         agentCombo.select(mode.ordinal());
-        btnImplement.setEnabled(!this.working.get() && isPlanLike && implEnabled);
+        btnImplement.setEnabled(!this.working.get() && isPlanLike);
         boolean implVisibilityChanged = btnImplement.getVisible() != isPlanLike;
         if (implVisibilityChanged) {
             ((RowData) btnImplement.getLayoutData()).exclude = !isPlanLike;

@@ -6,9 +6,10 @@ import java.util.List;
 import org.sterl.llmpeon.shared.StringUtil;
 import org.sterl.llmpeon.tool.model.SimpleMessage.Type;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 
 public enum ToSimpleMessage{
@@ -22,16 +23,20 @@ public enum ToSimpleMessage{
         String text = "";
         if (msg instanceof UserMessage um) {
             role = Type.USER;
-            text = um.singleText();
+            if (um.hasSingleText()) text = um.singleText();
+            else {
+                var tc = um.contents().stream().filter(t -> t instanceof TextContent).toList();
+                if (tc.size() > 0) text = ((TextContent)tc.getLast()).text(); 
+            }
         } else if (msg instanceof AiMessage am) {
             if (StringUtil.hasValue(am.thinking())) {
                 result.add(new SimpleMessage(Type.THINK, am.thinking()));
             }
             role = Type.AI;
             text = am.text();
-        } else if (msg instanceof ToolExecutionResultMessage tr) {
+        } else if (msg instanceof ToolExecutionRequest tr) {
             role = Type.TOOL;
-            text = tr.text();
+            text = "Using " + tr.name();
         }
         if (text != null) text = text.trim();
         

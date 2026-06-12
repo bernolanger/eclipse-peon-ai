@@ -13,6 +13,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -75,8 +76,16 @@ public class EclipseUtil {
 
         if (editor != null) {
             IEditorInput input = editor.getEditorInput();
-            IFile file = input.getAdapter(IFile.class);
-            return Optional.ofNullable(file);
+
+            // Fast path: direct IFile adapter (works for all standard workspace editors)
+            var file = input.getAdapter(IFile.class);
+            if (file != null) return Optional.of(file);
+
+            // Fallback: JDT compilation unit (handles linked resources, derived sources, etc.)
+            ICompilationUnit cu = editor.getAdapter(ICompilationUnit.class);
+            if (cu != null && cu.getResource() instanceof IFile f) {
+                return Optional.of(f);
+            }
         }
         return Optional.empty();
     }

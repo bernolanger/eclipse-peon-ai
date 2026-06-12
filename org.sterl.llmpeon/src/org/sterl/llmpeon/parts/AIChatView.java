@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -65,7 +66,6 @@ import org.sterl.llmpeon.tool.tools.ShellTool;
 import org.sterl.llmpeon.voice.VoiceConfig;
 import org.sterl.llmpeon.voice.VoiceInputService;
 
-import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.ToolExecutionException;
@@ -228,25 +228,36 @@ public class AIChatView implements EclipseAiMonitor {
 
     @Inject
     @org.eclipse.e4.core.di.annotations.Optional
-    public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) ISelection s) {
-        if (s == null || s.isEmpty()) return;
-        if (s instanceof IStructuredSelection iss) {
-            if (iss.size() == 1) setSelection(iss.getFirstElement());
-            else setSelection(iss.toArray());
+    public void onSelection(@Named(IServiceConstants.ACTIVE_SELECTION) ISelection s) {
+        if (s == null || s.isEmpty()) onSelection((Object)null);
+        else if (s instanceof IStructuredSelection iss) {
+            if (iss.size() == 1) onSelection(iss.getFirstElement());
+            else onSelection(iss.toArray());
         }
     }
 
     @Inject
     @org.eclipse.e4.core.di.annotations.Optional
-    public void setTextSelection(@Named(IServiceConstants.ACTIVE_SELECTION) ITextSelection ts) {
-        userContext.setTextSelection(ts);
+    public void onTextSelection(@Named(IServiceConstants.ACTIVE_SELECTION) ITextSelection ts) {
+        EclipseUtil.runInUiThread(parent, () -> {
+            userContext.setTextSelection(ts);
+            refreshStatusLine();
+        });
     }
 
     @Inject
     @org.eclipse.e4.core.di.annotations.Optional
-    public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) Object o) {
-        if (o instanceof ISelection) return;
-        userContext.setTextSelection(null);
+    public void onSelection(@Named(IServiceConstants.ACTIVE_SELECTION) Object o) {
+        if (o instanceof ITextSelection) return;
+        
+        if (o instanceof ITreeSelection ts) {
+            if (ts.isEmpty()) o = null;
+            else o = ts.getFirstElement();
+        } else if (o instanceof IStructuredSelection ss) {
+            if (ss.isEmpty()) o = null;
+            else o = ss.getFirstElement();
+        }
+
         final IResource selection;
         if (o instanceof ICompilationUnit cu) {
             selection = cu.getResource();
@@ -268,6 +279,7 @@ public class AIChatView implements EclipseAiMonitor {
         } else {
             selection = null;
         }
+        userContext.setTextSelection(null);
         userContext.setSelectedResource(selection);
         updateSelectedProject(EclipseUtil.resolveProject(selection));
     }
@@ -292,9 +304,15 @@ public class AIChatView implements EclipseAiMonitor {
 
     @Inject
     @org.eclipse.e4.core.di.annotations.Optional
-    public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) Object[] selectedObjects) {
+    public void onSelection(@Named(IServiceConstants.ACTIVE_SELECTION) Object[] selectedObjects) {
         if (selectedObjects != null && selectedObjects.length > 0) {
-            setSelection(selectedObjects[0]);
+            for (var s : selectedObjects) {
+                if (s instanceof IResource) {
+                    onSelection(s);
+                    break;
+                }
+            }
+            onSelection(selectedObjects[0]);
         }
     }
 
@@ -331,7 +349,7 @@ public class AIChatView implements EclipseAiMonitor {
                 aiService.getAgentMode().startImplementation();
             }
             refreshStatusLine();
-            actionsBar.updateModeUI(aiService.getPeonMode(), isImplEnabled());
+            actionsBar.updateModeUI(aiService.getPeonMode());
         });
     }
 
@@ -384,15 +402,7 @@ public class AIChatView implements EclipseAiMonitor {
         chatHistory.clearMessages();
         aiService.getActiveService().getMessages().forEach(chatHistory::appendMessage);
         refreshStatusLine();
-        actionsBar.updateModeUI(aiService.getPeonMode(), isImplEnabled());
-    }
-
-    private boolean isImplEnabled() {
-        return switch (aiService.getPeonMode()) {
-            case PLAN  -> aiService.getPlannerService().getMessages().stream().anyMatch(m -> m.type() == ChatMessageType.AI);
-            case AGENT -> aiService.getAgentMode().overviewExists();
-            default    -> false;
-        };
+        actionsBar.updateModeUI(aiService.getPeonMode());
     }
 
     // -------------------------------------------------------------------------
@@ -538,13 +548,14 @@ public class AIChatView implements EclipseAiMonitor {
     // at least be moved to the AIChatViewController
     // so doSendMessage(); here can be removed or better be reused? as we use this also as button action
     private void doStartImpl() {
+        chatHistory.clear();
         if (aiService.getPeonMode() == PeonMode.AGENT) {
-            aiService.getAgentMode().startImplementation();
-            refreshChat();
+            if (aiService.getAgentMode().startImplementation()) refreshChat();
+            else onChatResponse(new SimpleMessage(Type.PROBLEM, "Plan missing ..."));
         } else {
             // PLAN -> DEV: hand off the plan to the developer service
             aiService.setPeonMode(PeonMode.DEV);
-            actionsBar.updateModeUI(PeonMode.DEV, true);
+            actionsBar.updateModeUI(PeonMode.DEV);
             if (aiService.startImplementation()) {
                 refreshChat();
                 if (StringUtil.hasNoValue(chatInput.getText())) {
@@ -595,10 +606,7 @@ public class AIChatView implements EclipseAiMonitor {
 
         var active = aiService.getActiveService();
 
-        final var selection = userContext.getUserSelection();
-        final var needsSelection = !active.hasUserText(selection);
-
-        final var text = StringUtil.strip(chatInput.getText().trim()) + (needsSelection ? selection : "");
+        final var text = StringUtil.strip(chatInput.getText().trim());
         if (StringUtil.hasNoValue(text) && active.getMessages().isEmpty()) return;
 
         if (StringUtil.hasValue(text)) {
@@ -731,7 +739,6 @@ public class AIChatView implements EclipseAiMonitor {
             if (Character.isWhitespace(trimmed.charAt(i))) { wsIdx = i; break; }
         }
         var name = wsIdx < 0 ? trimmed.substring(1) : trimmed.substring(1, wsIdx);
-        var rest = wsIdx < 0 ? "" : trimmed.substring(wsIdx).stripLeading();
         if (name.isBlank()) return;
 
         var commandService = aiService.getCommandService();
@@ -753,9 +760,6 @@ public class AIChatView implements EclipseAiMonitor {
                 return;
             }
         }
-        // If only the slash token was entered, keep it visible as the user turn so the chat
-        // history clearly shows which command was invoked AND the LLM receives a non-empty turn.
-        chatInput.setText(rest.isEmpty() ? "/" + name : rest);
         chatInput.dismissSlashMenu();
     }
 

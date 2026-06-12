@@ -222,13 +222,20 @@ public class AgentModeService {
     // Start implementation (called by "Start Impl." button or autonomous trigger)
     // -------------------------------------------------------------------------
 
-    public void startImplementation() {
+    /**
+     * Returns <code>true</code> if a plan was found, otherwise <code>false</code>
+     */
+    public boolean startImplementation() {
         this.phase = Phase.IMPLEMENTING;
         retryCount = 0;
-        developerService.clear();
-        String plan = overviewExists() ? readOverview() : "no plan file found - stop!";
-        developerService.addMessage(UserMessage.from("Start Implementation\n\n" + plan));
-        sendTrigger.run();
+        if (overviewExists()) {
+            developerService.clear();
+            developerService.addMessage(UserMessage.from("Start Implementation\n\n" + readOverview()));
+            sendTrigger.run();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void openOverviewInEditor() {

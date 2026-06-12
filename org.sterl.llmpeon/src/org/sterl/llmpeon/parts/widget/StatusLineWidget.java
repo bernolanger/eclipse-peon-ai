@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
@@ -132,7 +131,7 @@ public class StatusLineWidget extends Composite {
 
     public void update(int skillCount, String agentFileName, boolean agentMdActive,
             IProject project, 
-            IResource selectedResource) {
+            String selected) {
 
         // --- Pin: show/hide the button with project name ---
         boolean hasProject = project != null;
@@ -149,7 +148,7 @@ public class StatusLineWidget extends Composite {
         if (agentFileName == null) {
             btnAgentsMd.setEnabled(false);
             btnAgentsMd.setSelection(false);
-            btnAgentsMd.setText("No agents.md");
+            btnAgentsMd.setText("No AGENTS.md");
         } else {
             btnAgentsMd.setSelection(agentMdActive);
             btnAgentsMd.setEnabled(true);
@@ -159,7 +158,7 @@ public class StatusLineWidget extends Composite {
         }
 
         // --- File ---
-        fileLabel.setText(selectedResource != null ? selectedResource.getName() : "");
+        fileLabel.setText(selected == null ? "" : selected);
 
         setSkillCount(skillCount);
 
