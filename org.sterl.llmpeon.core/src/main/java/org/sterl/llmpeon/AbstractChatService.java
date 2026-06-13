@@ -131,7 +131,8 @@ public abstract class AbstractChatService {
 
     public ChatResponse compressContext(AiMonitor monitor) {
         var response = new AiCompressorAgent(
-                    configuredModel.getChatModel(), configuredModel.getConfig().getDevTemperature() < 1.0 ? 0.2 : null)
+                    configuredModel.getChatModel(), 
+                    configuredModel.getConfig().getDevTemperature() < 1.0 ? 0.2 : null)
                 .call(memory.messages(), monitor);
         memory.clear();
         memory.add(AiMessage.from("[Context summary]\n" + response.aiMessage().text()));

@@ -130,12 +130,16 @@ public class PeonAiService implements MessageProvider {
         toolService.addTool(new EclipseCodeNavigationTool());
         toolService.addTool(new EclipseConsoleLogTool());
 
-        developerService = new AiDeveloperService(configuredModel, toolService);
-        plannerService   = new AiPlannerService(configuredModel, toolService);
+        LlmConfig config = configuredModel.getConfig();
+        ConfiguredModel devModel    = config.withModel(config.getDevModel()).build();
+        ConfiguredModel planModel   = config.withModel(config.getPlanModel()).build();
+
+        developerService = new AiDeveloperService(devModel, toolService);
+        plannerService   = new AiPlannerService(planModel, toolService);
 
         // Agent mode uses separate instances with isolated memory
-        var agentDev  = new AiDeveloperService(configuredModel, toolService);
-        var agentPlan = new AiPlannerService(configuredModel, toolService);
+        var agentDev  = new AiDeveloperService(devModel, toolService);
+        var agentPlan = new AiPlannerService(planModel, toolService);
         agentMode     = new AgentModeService(agentPlan, agentDev, sendTrigger, openInEditorCallback);
         agentModeTool = new AgentModeTool(agentMode);
 

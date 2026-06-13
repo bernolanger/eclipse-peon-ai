@@ -36,6 +36,7 @@ export default defineConfig({
           items: [
             { text: 'Installation', link: '/setup/installation' },
             { text: 'Configuration', link: '/setup/configuration' },
+            { text: 'Advanced Configuration', link: '/setup/advanced-configuration' },
             { text: 'MCP', link: '/setup/mcp-configuration' },
             { text: 'Voice', link: '/setup/voice-config' },
             { text: 'Which model?', link: '/model-checks' },
@@ -57,14 +58,7 @@ export default defineConfig({
             { text: 'Building', link: '/development/building' }
           ]
         },
-        {
-          text: 'Design',
-          items: [
-            { text: 'Interaction UI', link: '/design/interaction-design' },
-            { text: 'Plan/Dev/Agent Design (WIP)', link: '/design/plan-dev-agent-design' },
-            { text: 'Advanced Configuration', link: '/design/advanced-configuration' }
-          ]
-        }
+
       ]
     },
 
