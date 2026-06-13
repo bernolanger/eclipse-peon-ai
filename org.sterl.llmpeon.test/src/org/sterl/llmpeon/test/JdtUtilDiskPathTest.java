@@ -68,7 +68,7 @@ public class JdtUtilDiskPathTest extends AbstractTest {
                     }
                     // Recurse into folders
                     if (member instanceof IContainer subContainer) {
-                        var found = findAnySubResource(member);
+                        var found = findAnySubResource(subContainer);
                         if (found != null) return found;
                     }
                 }

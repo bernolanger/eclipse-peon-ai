@@ -5,7 +5,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
-import org.sterl.llmpeon.ai.ConfiguredModel;
+import org.sterl.llmpeon.ai.ConfiguredChatModel;
+import org.sterl.llmpeon.ai.LlmConfig;
 import org.sterl.llmpeon.shared.AiMonitor;
 import org.sterl.llmpeon.shared.ChatMessageUtil;
 import org.sterl.llmpeon.streaming.StreamingBridge;
@@ -39,9 +40,8 @@ public class ToolLoopRequest {
     @Getter
     @NonNull
     private final ChatMemory memory;
-    @Getter
     @NonNull
-    private final ConfiguredModel model;
+    private final ConfiguredChatModel chatModel;
     @Default
     private final StreamingBridge bridge = new StreamingBridge();
 
@@ -65,11 +65,15 @@ public class ToolLoopRequest {
     }
 
     public StreamingChatModel getChatModel() {
-        return model.getChatModel();
+        return chatModel.getChatModel();
+    }
+    
+    public LlmConfig getConfig() {
+        return chatModel.getConfig();
     }
     
     public ChatResponse call(ChatRequest chatRequest) {
-        return bridge.call(model.getChatModel(), chatRequest, monitor);
+        return bridge.call(chatModel.getChatModel(), chatRequest, monitor);
     }
 
     /**

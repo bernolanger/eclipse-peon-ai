@@ -59,7 +59,7 @@ public class EclipseBuildTool extends AbstractEclipseTool {
         }
     }
 
-    @Tool("Eclipse: Build project and return errors/warnings. Preferred way to verify code changes.")
+    @Tool("Eclipse: Refresh and clean build the project. Returns errors/warnings. Preferred way to verify code changes or full refresh.")
     public String buildEclipseProject(@P(name ="projectName") String projectName) {
         ArgsUtil.requireNonBlank(projectName, "projectName");
 

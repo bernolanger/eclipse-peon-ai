@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.sterl.llmpeon.ai.ConfiguredModel;
+import org.sterl.llmpeon.ai.ConfiguredChatModel;
 import org.sterl.llmpeon.ai.LlmConfig;
 import org.sterl.llmpeon.shared.ChatMessageUtil;
 import org.sterl.llmpeon.tool.SmartTool;
@@ -65,7 +65,7 @@ public class AiDeveloperServiceTest {
     void beforeEach() {
         toolService.replaceTool(new CompactSessionTool());
         cm = mockWithHandler();
-        subject = new AiDeveloperService(new ConfiguredModel(LlmConfig.newOllama("foo"), cm), toolService);
+        subject = new AiDeveloperService(new ConfiguredChatModel(LlmConfig.newOllama("foo"), cm), toolService);
     }
     
     @Test

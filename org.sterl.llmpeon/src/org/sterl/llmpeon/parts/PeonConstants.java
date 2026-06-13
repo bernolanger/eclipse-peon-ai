@@ -6,7 +6,6 @@ import org.eclipse.core.runtime.Status;
 public interface PeonConstants {
     String PLUGIN_ID             = "org.sterl.llmpeon";
     String PREF_PROVIDER_TYPE    = "llm.providerType";
-    String PREF_MODEL            = "llm.model";
     String PREF_URL              = "llm.url";
     String PREF_TOKEN_WINDOW     = "llm.tokenWindow";
     String PREF_MAX_TOKENS       = "llm.maxTokens";
@@ -40,9 +39,20 @@ public interface PeonConstants {
 
     String PREF_AGENTS_MD_ENABLED  = "agentsMd.enabled";   // boolean, default true
 
-    String PREF_SEARCH_MODEL = "llm.searchModel";
-    String PREF_PLAN_MODEL   = "llm.planModel";
+    String PREF_MODEL            = "llm.model";
+    /*
     String PREF_DEV_MODEL    = "llm.devModel";
+    String PREF_PLAN_MODEL   = "llm.planModel";
+    String PREF_SEARCH_MODEL = "llm.searchModel";
+    
+    public static String modelPref(PeonMode mode) {
+        switch (mode) {
+            case DEV: return PREF_DEV_MODEL;
+            case PLAN: return PREF_PLAN_MODEL;
+            default: return PREF_MODEL;
+        }
+    }
+    */
 
     public static IStatus okStatus(String message) {
         return new Status(IStatus.OK, PLUGIN_ID, message);

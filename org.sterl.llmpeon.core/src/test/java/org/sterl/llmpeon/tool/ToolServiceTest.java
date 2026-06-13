@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
-import org.sterl.llmpeon.ai.ConfiguredModel;
+import org.sterl.llmpeon.ai.ConfiguredChatModel;
 import org.sterl.llmpeon.ai.LlmConfig;
 import org.sterl.llmpeon.tool.tools.WebFetchTool;
 
@@ -51,7 +51,7 @@ class ToolServiceTest {
         // WHEN
         memory.add(UserMessage.from("Hello"));
         var response = subject.executeLoop(
-                ToolLoopRequest.builder().memory(memory).model(new ConfiguredModel(LlmConfig.newOpenAi("foo"), cm)).build());
+                ToolLoopRequest.builder().memory(memory).chatModel(new ConfiguredChatModel(LlmConfig.newOpenAi("foo"), cm)).build());
 
         // THEN
         assertEquals("Hello", response.aiMessage().text());
@@ -74,7 +74,7 @@ class ToolServiceTest {
         var memory = MessageWindowChatMemory.withMaxMessages(50);
         // WHEN
         memory.add(UserMessage.from("Hello"));
-        subject.executeLoop(ToolLoopRequest.builder().memory(memory).model(new ConfiguredModel(LlmConfig.newOpenAi("foo"), cm)).build());
+        subject.executeLoop(ToolLoopRequest.builder().memory(memory).chatModel(new ConfiguredChatModel(LlmConfig.newOpenAi("foo"), cm)).build());
 
         // THEN
         verify(cm, times(2)).chat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
@@ -104,7 +104,7 @@ class ToolServiceTest {
         var memory = MessageWindowChatMemory.withMaxMessages(50);
         memory.add(userMessage);
         // WHEN
-        subject.executeLoop(ToolLoopRequest.builder().memory(memory).model(new ConfiguredModel(LlmConfig.newOpenAi("foo"), cm))
+        subject.executeLoop(ToolLoopRequest.builder().memory(memory).chatModel(new ConfiguredChatModel(LlmConfig.newOpenAi("foo"), cm))
                 .staticMessages(Arrays.asList(sys1, sys2))
                 .build());
 

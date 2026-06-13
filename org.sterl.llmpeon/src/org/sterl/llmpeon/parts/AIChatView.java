@@ -552,11 +552,16 @@ public class AIChatView implements EclipseAiMonitor {
             if (aiService.startImplementation()) {
                 if (StringUtil.hasNoValue(chatInput.getText())) {
                     // some models e.g. Qwen need a use message as last message
+                    // compactSession
                     chatInput.setText("""
-                        Start implementing this plan. Save larger plans in the peon-plan/ directory using a sensible filename (for example, based on the title or main goal). 
-                        Treat that plan file as your long-term memory when needed. 
-                        Keep token usage low: when you switch to a different piece of work, 
-                        use the compressor tool to summarize this session and echo the key next steps plus the plan file path in the preserved instructions.
+                        Implement the plan.
+                        
+                        If the plan is large, save it to plan/ using a filename derived from the feature name.
+                        Treat the plan file as long-term memory — update it as decisions are made or steps completed.
+                        
+                        When switching to a different piece of work:
+                        1. Batch in parallel: run compactSession on the current conversation + read the plan file + read any referenced files or prior plans.
+                        2. Pass into the preserve parameter: this handover instruction, the plan file path, and the next steps.
                         """);
                 }
                 this.refreshChat();
@@ -592,7 +597,7 @@ public class AIChatView implements EclipseAiMonitor {
     }
 
     private void doSendMessage() {
-        if (StringUtil.hasNoValue(aiService.getModel())) {
+        if (StringUtil.hasNoValue(aiService.getModelName())) {
             chatHistory.appendMessage(new SimpleMessage(Type.PROBLEM, "No model configured — open Window > Preferences > Peon AI"));
             return;
         }

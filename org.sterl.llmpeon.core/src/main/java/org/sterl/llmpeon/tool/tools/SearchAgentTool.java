@@ -2,7 +2,7 @@ package org.sterl.llmpeon.tool.tools;
 
 import java.util.Arrays;
 
-import org.sterl.llmpeon.PromptLoader;
+import org.sterl.llmpeon.prompt.PromptLoader;
 import org.sterl.llmpeon.shared.ArgsUtil;
 import org.sterl.llmpeon.shared.StringUtil;
 import org.sterl.llmpeon.tool.ToolService;
@@ -13,6 +13,7 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
+// TODO move to service/agent
 public class SearchAgentTool extends AbstractTool {
 
     final SystemMessage system = SystemMessage.systemMessage(PromptLoader.loadWithDefault("search-agent.txt"));
@@ -31,7 +32,7 @@ public class SearchAgentTool extends AbstractTool {
             var messages = MessageWindowChatMemory.withMaxMessages(5000);
             messages.add(UserMessage.from(prompt));
 
-            var devTemp = this.request.getModel().getConfig().getDevTemperature();
+            var devTemp = this.request.getConfig().getDevTemperature();
             onTool("SearchAgent start: " + prompt);
             var response = toolService.executeLoop(this.request.toBuilder()
                     .staticMessages(Arrays.asList(system))

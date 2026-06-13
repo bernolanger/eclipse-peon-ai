@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.sterl.llmpeon.ai.model.AiModel;
+import org.sterl.llmpeon.shared.StringUtil;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,7 @@ public class LlmConfig {
     private final AiProvider providerType = AiProvider.OLLAMA;
     @Default
     private final String model = null;
+
     @Default
     private final String url = null;
     @Default
@@ -68,12 +70,6 @@ public class LlmConfig {
     private final Map<String, String> queryParams = new LinkedHashMap<>();
     @Default
     private final Map<String, String> headerParams = new LinkedHashMap<>();
-    @Default
-    private final String searchModel = null;
-    @Default
-    private final String planModel = null;
-    @Default
-    private final String devModel = null;
     
     /**
      * Some LLMs needs this some not
@@ -81,18 +77,6 @@ public class LlmConfig {
      */
     public boolean shouldWeSendThinkingBackToLLM() {
         return thinkingEnabled && sendThinkingEnabled;
-    }
-
-    public String getSearchModel() {
-        return searchModel != null && !searchModel.isBlank() ? searchModel : model;
-    }
-
-    public String getPlanModel() {
-        return planModel != null && !planModel.isBlank() ? planModel : model;
-    }
-
-    public String getDevModel() {
-        return devModel != null && !devModel.isBlank() ? devModel : model;
     }
 
     public static LlmConfig newConfig(String model, String url) {
@@ -126,8 +110,8 @@ public class LlmConfig {
                 .build();
     }
 
-    public ConfiguredModel build() {
-        return new ConfiguredModel(this);
+    public ConfiguredChatModel build() {
+        return new ConfiguredChatModel(this);
     }
 
     public LlmConfig withModel(String model) {

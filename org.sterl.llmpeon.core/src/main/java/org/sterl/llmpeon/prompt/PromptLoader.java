@@ -1,4 +1,4 @@
-package org.sterl.llmpeon;
+package org.sterl.llmpeon.prompt;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

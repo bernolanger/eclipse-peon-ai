@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import org.junit.Test;
-import org.sterl.llmpeon.ai.ConfiguredModel;
+import org.sterl.llmpeon.ai.ConfiguredChatModel;
 import org.sterl.llmpeon.ai.LlmConfig;
 import org.sterl.llmpeon.parts.tools.EclipseBuildTool;
 import org.sterl.llmpeon.parts.tools.EclipseCodeNavigationTool;
@@ -172,7 +172,7 @@ public class EclipseWorkspaceReadFileToolTest extends AbstractTest {
         var content = service.execute(tr,
                 ToolLoopRequest.builder()
                     .memory(MessageWindowChatMemory.withMaxMessages(10))
-                    .model(new ConfiguredModel(LlmConfig.newOpenAi("foo")))
+                    .chatModel(new ConfiguredChatModel(LlmConfig.newOpenAi("foo")))
                     .build());
         
         // THEN

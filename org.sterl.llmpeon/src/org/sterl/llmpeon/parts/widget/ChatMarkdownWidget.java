@@ -48,7 +48,7 @@ public class ChatMarkdownWidget extends Composite {
         setLayout(new FillLayout());
 
         browser = new Browser(this, SWT.NONE);
-        new BrowserFunction(browser, "javaReady") {
+        new BrowserFunction(browser, "onChatViewReady") {
             @Override
             public Object function(Object[] arguments) {
                 EclipseUtil.runInUiThread(parent, () -> {

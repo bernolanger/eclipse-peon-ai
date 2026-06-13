@@ -2,7 +2,7 @@ package org.sterl.llmpeon.agent;
 
 import java.util.List;
 
-import org.sterl.llmpeon.PromptLoader;
+import org.sterl.llmpeon.prompt.PromptLoader;
 import org.sterl.llmpeon.shared.AiMonitor;
 import org.sterl.llmpeon.shared.ChatMessageUtil;
 import org.sterl.llmpeon.streaming.StreamingBridge;

@@ -1,8 +1,8 @@
 package org.sterl.llmpeon.parts.config;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -89,9 +89,6 @@ public class LlmPreferenceInitializer extends AbstractPreferenceInitializer {
             .headerParams(parseCsvMap(prefs.get(PeonConstants.PREF_HEADER_PARAMS, "")))
             .shellCommandConfirmationRequired("always".equals(prefs.get(PeonConstants.PREF_SHELL_CONFIRMATION_ENABLED, "")) ||
                     "not-autonomous".equals(prefs.get(PeonConstants.PREF_SHELL_CONFIRMATION_ENABLED, "")))
-            .searchModel(prefs.get(PeonConstants.PREF_SEARCH_MODEL, null))
-            .planModel(prefs.get(PeonConstants.PREF_PLAN_MODEL, null))
-            .devModel(prefs.get(PeonConstants.PREF_DEV_MODEL, null))
             .build();
     }
 

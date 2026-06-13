@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.sterl.llmpeon.agent.AiCompressorAgent;
-import org.sterl.llmpeon.ai.ConfiguredModel;
+import org.sterl.llmpeon.ai.ConfiguredChatModel;
+import org.sterl.llmpeon.ai.model.AiModel;
 import org.sterl.llmpeon.shared.AiMonitor;
 import org.sterl.llmpeon.shared.ChatMessageUtil;
 import org.sterl.llmpeon.shared.StringUtil;
@@ -26,20 +27,11 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 
 public abstract class AbstractChatService {
 
-    /**
-     * Conversation memory — holds only {@code UserMessage} and {@code AiMessage} entries.
-     * <p>
-     * {@code SystemMessage} must NOT be added here. The system prompt and standing orders
-     * (selected resource, AGENTS.md, plan hint) are assembled fresh on every call as
-     * {@link #buildStaticMessages()} and prepended to the request without touching memory.
-     * Keeping system messages out of memory ensures the compressor sees only real
-     * conversation turns and that compressed summaries survive subsequent compressions.
-     */
     protected final ChatMemory memory = MessageWindowChatMemory.builder()
             .id(this)
             .maxMessages(500000)
             .build();
-    protected final ConfiguredModel configuredModel;
+    protected final ConfiguredChatModel configuredModel;
 
     protected final ToolService toolService;
     
@@ -54,14 +46,14 @@ public abstract class AbstractChatService {
      */
     private String oneShotSystemPrompt;
 
-    protected AbstractChatService(ConfiguredModel configuredModel, ToolService toolService) {
+    protected AbstractChatService(ConfiguredChatModel configuredModel, ToolService toolService) {
         this.toolService = toolService;
         this.configuredModel = configuredModel;
     }
 
     protected abstract String getSystemPrompt();
     protected abstract double getTemperature();
-    
+
     /**
      * Apply only static filters to tools -- any change kills the KV cache!
      * https://github.com/ggml-org/llama.cpp/issues/22746#issuecomment-4630455537
@@ -71,6 +63,10 @@ public abstract class AbstractChatService {
     }
     
     protected boolean includesMcpTools() { return true; }
+    
+    public boolean setModelName(AiModel modelName) {
+        return this.configuredModel.withModel(modelName);
+    }
 
     public int tokenContextUsedInPercent() {
         float used = contextTokenSize;
@@ -114,7 +110,7 @@ public abstract class AbstractChatService {
         var response = toolService.executeLoop(
                 ToolLoopRequest.builder()
                     .memory(memory)
-                    .model(configuredModel)
+                    .chatModel(configuredModel)
                     .staticMessages(staticMessages)
                     .monitor(monitor)
                     .toolFilter(getToolFilter())

@@ -18,7 +18,7 @@ public class CompactSessionTool extends AbstractTool {
             """)
     public String compactSession(
             @P(description = "Short instructions or next steps to keep and echo back after compression.", required = false, name = "preserve") String preserve) {
-        var cfg = this.request.getModel().getConfig();
+        var cfg = this.request.getConfig();
         var model = this.request.getChatModel();
         var temp = cfg.getDevTemperature() < 1 ? Math.min(cfg.getDevTemperature() / 2, 0.3) : 1;
         var summary = new AiCompressorAgent(model, temp)

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.sterl.llmpeon.ai.AiProvider;
 import org.sterl.llmpeon.ai.LlmConfig;
+import org.sterl.llmpeon.prompt.PromptLoader;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;

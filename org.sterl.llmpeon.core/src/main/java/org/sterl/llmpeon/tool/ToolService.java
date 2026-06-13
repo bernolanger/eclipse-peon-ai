@@ -152,7 +152,7 @@ public class ToolService {
     }
 
     private void addCompactHintIfNeeded(ToolLoopRequest req, ChatResponse response, boolean force) {
-        var compactLimit = req.getModel().getConfig().getAutoCompactAfter();
+        var compactLimit = req.getConfig().getAutoCompactAfter();
         if (compactLimit <= 0 && !force) return;
 
         var messages = req.getMemory().messages();

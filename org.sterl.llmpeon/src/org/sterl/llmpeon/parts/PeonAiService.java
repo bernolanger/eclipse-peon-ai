@@ -12,7 +12,7 @@ import org.sterl.llmpeon.AiDeveloperService;
 import org.sterl.llmpeon.AiPlannerService;
 import org.sterl.llmpeon.PeonMode;
 import org.sterl.llmpeon.StandingOrdersBuilder.MessageProvider;
-import org.sterl.llmpeon.ai.ConfiguredModel;
+import org.sterl.llmpeon.ai.ConfiguredChatModel;
 import org.sterl.llmpeon.ai.LlmConfig;
 import org.sterl.llmpeon.ai.model.AiModel;
 import org.sterl.llmpeon.command.CommandService;
@@ -53,7 +53,7 @@ import dev.langchain4j.data.message.UserMessage;
  */
 public class PeonAiService implements MessageProvider {
 
-    private final ConfiguredModel configuredModel;
+    private final ConfiguredChatModel configuredModel;
     private final ToolService toolService;
     private final SkillService skillService;
     private final CommandService commandService;
@@ -78,7 +78,7 @@ public class PeonAiService implements MessageProvider {
      * Package-private constructor for unit tests — accepts pre-built services to avoid
      * hard Eclipse dependencies ({@code EclipseUtil.workspacePath()}, Eclipse tools, etc.).
      */
-    PeonAiService(ConfiguredModel configuredModel, AiPlannerService plannerService, AiDeveloperService developerService) {
+    PeonAiService(ConfiguredChatModel configuredModel, AiPlannerService plannerService, AiDeveloperService developerService) {
         this.configuredModel = configuredModel;
         this.plannerService = plannerService;
         this.developerService = developerService;
@@ -130,16 +130,15 @@ public class PeonAiService implements MessageProvider {
         toolService.addTool(new EclipseCodeNavigationTool());
         toolService.addTool(new EclipseConsoleLogTool());
 
-        LlmConfig config = configuredModel.getConfig();
-        ConfiguredModel devModel    = config.withModel(config.getDevModel()).build();
-        ConfiguredModel planModel   = config.withModel(config.getPlanModel()).build();
+        var config = configuredModel.getConfig();
+        var model = config.build();
 
-        developerService = new AiDeveloperService(devModel, toolService);
-        plannerService   = new AiPlannerService(planModel, toolService);
+        developerService = new AiDeveloperService(model, toolService);
+        plannerService   = new AiPlannerService(model, toolService);
 
         // Agent mode uses separate instances with isolated memory
-        var agentDev  = new AiDeveloperService(devModel, toolService);
-        var agentPlan = new AiPlannerService(planModel, toolService);
+        var agentDev  = new AiDeveloperService(model, toolService);
+        var agentPlan = new AiPlannerService(model, toolService);
         agentMode     = new AgentModeService(agentPlan, agentDev, sendTrigger, openInEditorCallback);
         agentModeTool = new AgentModeTool(agentMode);
 
@@ -298,18 +297,18 @@ public class PeonAiService implements MessageProvider {
     }
 
     public void setModel(AiModel model) {
-        if (this.configuredModel.withModel(model)) {
+        if (this.getActiveService().setModelName(model)) {
             LlmPreferenceInitializer.setModel(model.getId());
         }
     }
 
-    public ConfiguredModel resolveModel(List<AiModel> models) {
+    public ConfiguredChatModel resolveModel(List<AiModel> models) {
         this.configuredModel.resolveModel(models);
         return configuredModel;
     }
 
-    public String getModel() {
-        return configuredModel.getModel();
+    public String getModelName() {
+        return configuredModel.getModelName();
     }
 
     public void withThinking(Boolean enabled) {

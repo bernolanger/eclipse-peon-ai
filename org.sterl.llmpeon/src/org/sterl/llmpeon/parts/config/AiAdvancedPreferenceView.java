@@ -21,10 +21,11 @@ public class AiAdvancedPreferenceView extends FieldEditorPreferencePage implemen
     @Override
     public void createFieldEditors() {
         addField(new StringFieldEditor(PeonConstants.PREF_MODEL, "Default Model:", getFieldEditorParent()));
+        /*
         addField(new StringFieldEditor(PeonConstants.PREF_SEARCH_MODEL, "Search Model (leave empty to use default):", getFieldEditorParent()));
         addField(new StringFieldEditor(PeonConstants.PREF_PLAN_MODEL, "Plan Model (leave empty to use default):", getFieldEditorParent()));
         addField(new StringFieldEditor(PeonConstants.PREF_DEV_MODEL, "Dev Model (leave empty to use default):", getFieldEditorParent()));
-
+*/
         addField(new IntegerFieldEditor(PeonConstants.PREF_MAX_TOKENS, "Max output tokens (0 to disable):",
                 getFieldEditorParent()));
 

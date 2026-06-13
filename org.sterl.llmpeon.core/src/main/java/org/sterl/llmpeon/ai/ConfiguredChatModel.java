@@ -15,16 +15,16 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import lombok.Getter;
 
 @Getter
-public class ConfiguredModel {
+public class ConfiguredChatModel {
 
     private final AtomicReference<StreamingChatModel> chatModel = new AtomicReference<>();
     private volatile LlmConfig config;
     
-    public ConfiguredModel(LlmConfig config) {
+    public ConfiguredChatModel(LlmConfig config) {
         updateConfig(config);
     }
     
-    public ConfiguredModel(LlmConfig config, StreamingChatModel model) {
+    public ConfiguredChatModel(LlmConfig config, StreamingChatModel model) {
         updateConfig(config);
         this.chatModel.set(model);
     }
@@ -43,14 +43,14 @@ public class ConfiguredModel {
         }
         return chatModel.get();
     }
-    
-    public String getModel() {
-        return config.getModel();
-    }
 
     public List<AiModel> listAiModels() {
         // TODO caching?
         return this.config.getProviderType().listAiModels(config);
+    }
+    
+    public String getModelName() {
+        return config.getModel();
     }
 
     /**
@@ -69,6 +69,20 @@ public class ConfiguredModel {
             }
         }
 
+        config = builder.build();
+        chatModel.set(null); // rebuild
+        return true;
+    }
+    
+    /**
+     * Returns a new config with the given model applied.
+     * 
+     * @return <code>true</code> if changed, otherwise <code>false</code>
+     */
+    public boolean withModelName(String aiModel) {
+        if (aiModel.equals(config.getModel())) return false;
+        
+        var builder = config.toBuilder().model(aiModel);
         config = builder.build();
         chatModel.set(null); // rebuild
         return true;
