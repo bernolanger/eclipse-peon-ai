@@ -52,7 +52,7 @@ public class ThreadSafeMemory {
         return this;
     }
     
-    public boolean containsUserMessage(String message) {
+    public synchronized boolean containsUserMessage(String message) {
         if (StringUtil.hasNoValue(message)) return true;
         return memory.stream()
             .filter(m -> m instanceof UserMessage)
@@ -68,7 +68,7 @@ public class ThreadSafeMemory {
         list.addAll(memory);
     }
 
-    public int size() {
+    public synchronized int size() {
         return memory.size();
     }
     
@@ -106,7 +106,7 @@ public class ThreadSafeMemory {
         totalTokenUsed = ChatMessageUtil.getTokenCount(response, memory);
     }
 
-    public void forEach(Consumer<ChatMessage> consumer) {
+    public synchronized void forEach(Consumer<ChatMessage> consumer) {
         this.memory.forEach(consumer);
     }
 

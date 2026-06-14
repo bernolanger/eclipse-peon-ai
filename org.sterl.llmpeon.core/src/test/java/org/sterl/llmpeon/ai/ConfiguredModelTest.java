@@ -82,4 +82,17 @@ class ConfiguredModelTest {
         assertEquals(9000, subject.getConfig().getAutoCompactAfter());
     }
 
+    @Test
+    void test_withModel_null_id_does_not_throw_npe() {
+        var config = LlmConfig.builder().model("old").url("http://bar").build();
+        var subject = new ConfiguredChatModel(config);
+        // Create AiModel with null id — this should not cause NPE
+        var aiModel = AiModel.builder().id(null).maxInputTokens(10000).build();
+
+        assertDoesNotThrow(() -> {
+            boolean changed = subject.withModel(aiModel);
+            // Should return true since models are different (null != "old")
+            assertTrue(changed);
+        });
+    }
 }

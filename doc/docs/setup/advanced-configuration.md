@@ -14,9 +14,10 @@ Different agents can use different models to optimize for cost, speed, or capabi
 
 | Agent | Purpose | Recommended Model Type |
 |-------|---------|----------------------|
-| **Search** | Finding relevant context and information | Fast, smaller models (e.g., `gpt-4o-mini`, `llama3.2`) |
-| **Plan** | Creating task plans and strategies | Reasoning-capable models (e.g., `o3-mini`, `gemini-2.0-flash`) |
-| **Compact** | Conversation compression for context management | Fast, smaller models (e.g., `gpt-4o-mini`, `llama3.2`) |
+| **Dev (default)** | Creating task plans and strategies | Reasoning-capable models (e.g., `Sonnet`) |
+| **Plan** | Creating task plans and strategies | Reasoning-capable models (e.g., `Opus`) |
+| **Search** | Finding relevant context and information | Fast, smaller models (e.g., `Haiku`) |
+| **Compact** | Conversation compression for context management | Fast, smaller models (e.g., `Haiku`) |
 
 ### How It Works
 
@@ -25,40 +26,25 @@ Different agents can use different models to optimize for cost, speed, or capabi
 3. Enter a specific model name to override only that agent's model
 4. Models are validated against your provider's available models when you click "Check Host and Port..."
 
-**Example Setup:**
-- **Default Model**: `gpt-4o` — used by Dev agent for code generation
-- **Search Model**: `gpt-4o-mini` — faster, cheaper for context retrieval
-- **Plan Model**: *(empty - uses provider default)*
-- **Compact Model**: `gpt-4o-mini` — fast model for conversation compression
-
 ## Temperature Settings
 
 Temperature controls the randomness of model outputs:
 
 | Setting | Range | Effect |
 |---------|-------|--------|
-| **Plan Temperature** | 0.0 - 2.0 | Higher = more creative plans; Lower = more deterministic |
-| **Dev Temperature** | 0.0 - 2.0 | Controls code generation creativity (uses base model) |
+| **Plan Temperature** | 0.6 - 1.0 | Higher = more creative plans; Lower = more deterministic |
+| **Dev Temperature**  | 0.2 - 0.6 | Controls code generation creativity (uses base model) |
 
-### Recommended Values
-
-- **Planning**: 0.3-0.7 (balance creativity with reliability)
-- **Development**: 0.1-0.3 (consistency is important for code)
+- Claude and some other models only accept 1.0.
 
 ## Debug Mode
 
-When enabled, logs all requests and responses to the Eclipse console:
-
-```java
-// Example log output when debug mode is enabled
-[DEBUG] Request: {"model": "gpt-4o", "messages": [...], "temperature": 0.2}
-[DEBUG] Response: {"choices": [{"message": {...}}], "usage": {...}}
-```
+When enabled, logs all requests and responses to the Eclipse console.
 
 **Use cases:**
 - Troubleshooting connection issues
 - Understanding what context is being sent to the model
-- Debugging prompt template issues
+- Debugging prompt template issues if you create an issue
 
 ## Query Parameters
 
@@ -85,11 +71,14 @@ Useful for:
 ## Max Output Tokens
 
 Controls the maximum number of tokens in model responses (0 = disable limit):
+`langchain4j` and some LLMs default to 1024 -- if you have odd behaviors increase this.
+
 
 | Setting | Effect |
 |---------|--------|
-| **Low values** (100-500) | Short, concise responses; faster generation |
-| **High values** (2000+) | Detailed explanations; may increase latency |
+| **Low values** (1024) | Short, concise responses; faster generation - may break |
+| **Recommended low** (2048) | Have a short value, limits also the think budget where possible |
+| **Default nowerdays** (4000) | Usually a a good default or with Opus around 8000 |
 | **Disabled** (0) | Provider's default limit applies |
 
 ---
@@ -97,14 +86,5 @@ Controls the maximum number of tokens in model responses (0 = disable limit):
 ## Troubleshooting
 
 ### Models Not Being Used by Agents
-If you've configured per-agent models but agents still use the default model:
-1. Verify your provider supports the specified models
-2. Check that model names match exactly (case-sensitive)
-3. Enable debug mode to see which model is actually being used in requests
-4. Restart Eclipse after changing preferences
 
-### Connection Issues with Custom Parameters
-If query or header parameters cause connection failures:
-1. Verify parameter format: `key=value,key2=value2` (no spaces around commas)
-2. Check provider documentation for supported parameters
-3. Remove custom parameters temporarily to isolate the issue
+Restart Eclipse after changing preferences

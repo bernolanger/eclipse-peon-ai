@@ -76,11 +76,18 @@ public class LlmPreferenceInitializer extends AbstractPreferenceInitializer {
 
         return LlmConfig.builder()
             .providerType(AiProvider.parse(prefs.get(PeonConstants.PREF_PROVIDER_TYPE, DEFAULT.getProviderType().name())))
+
             .model(prefs.get(PeonConstants.PREF_MODEL, DEFAULT.getModel()))
+            .planModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_PLAN_MODEL, null)))
+            .compactModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_COMPACT_MODEL, null)))
+            .searchModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_SEARCH_MODEL, null)))
+
             .url(prefs.get(PeonConstants.PREF_URL, DEFAULT.getUrl()))
             .timeout(Duration.ofSeconds(prefs.getLong(PeonConstants.PREF_TIMEOUT, 180)))
+
             .autoCompactAfter(prefs.getInt(PeonConstants.PREF_TOKEN_WINDOW, DEFAULT.getAutoCompactAfter()))
             .maxTokens(prefs.getInt(PeonConstants.PREF_MAX_TOKENS, 0))
+
             .thinkingEnabled(prefs.getBoolean(PeonConstants.PREF_THINKING_ENABLED, DEFAULT.isThinkingEnabled()))
             .sendThinkingEnabled(prefs.getBoolean(PeonConstants.PREF_SEND_THINKING_ENABLED, DEFAULT.isSendThinkingEnabled()))
             .apiKey(prefs.get(PeonConstants.PREF_API_KEY, ""))
@@ -94,9 +101,6 @@ public class LlmPreferenceInitializer extends AbstractPreferenceInitializer {
             .headerParams(parseCsvMap(prefs.get(PeonConstants.PREF_HEADER_PARAMS, "")))
             .shellCommandConfirmationRequired("always".equals(prefs.get(PeonConstants.PREF_SHELL_CONFIRMATION_ENABLED, "")) ||
                     "not-autonomous".equals(prefs.get(PeonConstants.PREF_SHELL_CONFIRMATION_ENABLED, "")))
-            .planModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_PLAN_MODEL, null)))
-            .planModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_PLAN_MODEL, null)))
-            .searchModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_SEARCH_MODEL, null)))
             .build();
     }
 

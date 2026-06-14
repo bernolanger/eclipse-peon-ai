@@ -59,7 +59,11 @@ public class ConfiguredChatModel {
      * @return <code>true</code> if changed, otherwise <code>false</code>
      */
     public boolean withModel(AiModel aiModel) {
-        if (aiModel.getId().equals(config.getModel())) return false;
+        if (StringUtil.hasNoValue(aiModel.getId())) {
+            // Cannot compare — proceed to update
+        } else if (aiModel.getId().equals(config.getModel())) {
+            return false;
+        }
         
         var builder = config.toBuilder().model(aiModel.getId());
         if (aiModel.getMaxInputTokens()  != null) {

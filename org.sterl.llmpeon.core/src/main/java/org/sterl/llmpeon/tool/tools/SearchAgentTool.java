@@ -43,8 +43,8 @@ public class SearchAgentTool extends AbstractTool {
             if (cfg.getDevTemperature() < 1) request.temperature(0.3);
             if (modelName != null) request.modelName(cfg.getSearchModel());
 
-            onTool("SearchAgent " 
-                    + modelName == null ? "" : "(" + modelName + ")" 
+            onTool("SearchAgent "
+                    + (modelName == null ? "" : "(" + modelName + ")")
                     + " start:\n" + prompt);
             var response = toolService.executeLoop(request.build());
 

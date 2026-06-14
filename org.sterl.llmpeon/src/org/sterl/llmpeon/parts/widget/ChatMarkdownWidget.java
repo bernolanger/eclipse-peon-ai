@@ -150,7 +150,9 @@ public class ChatMarkdownWidget extends Composite {
     }
     
     public void updateLiveResponseInUIThread(String state, double tokPerSec, String safeChunk) {
-        EclipseUtil.runInUiThread(parent, () -> browser.execute("updateLiveResponse('" + state + "', " + tokPerSec + ", '" + safeChunk + "');"));
+        EclipseUtil.runInUiThread(parent, () -> browser.execute(
+            "updateLiveResponse('" + state + "', " + tokPerSec + ", '" + safeChunk + "');"
+        ));
     }
 
     public void showDiff(String unifiedDiff) {
