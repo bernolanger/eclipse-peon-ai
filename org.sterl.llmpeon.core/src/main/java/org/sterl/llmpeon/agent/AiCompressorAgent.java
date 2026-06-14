@@ -2,15 +2,14 @@ package org.sterl.llmpeon.agent;
 
 import java.util.List;
 
+import org.sterl.llmpeon.ai.ConfiguredChatModel;
 import org.sterl.llmpeon.prompt.PromptLoader;
 import org.sterl.llmpeon.shared.AiMonitor;
 import org.sterl.llmpeon.shared.ChatMessageUtil;
-import org.sterl.llmpeon.streaming.StreamingBridge;
 
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 
@@ -18,17 +17,14 @@ public class AiCompressorAgent {
 
     private static final SystemMessage COMPRESS_SYSTEM = SystemMessage.systemMessage(PromptLoader.load("compressor.txt"));
 
-    private final StreamingChatModel chatModel;
-    
-    private final Double temperature;
+    private final ConfiguredChatModel chatModel;
 
     /**
      * Not every model supports a different temperature -- leave empty to use model defaults.
      */
-    public AiCompressorAgent(StreamingChatModel chatModel, Double temperature) {
+    public AiCompressorAgent(ConfiguredChatModel chatModel) {
         super();
         this.chatModel = chatModel;
-        this.temperature = temperature;
     }
 
     /**
@@ -45,9 +41,10 @@ public class AiCompressorAgent {
         var request = ChatRequest.builder()
                 .messages(COMPRESS_SYSTEM, UserMessage.from(msg.toString()));
 
-        if (temperature != null) request.temperature(temperature);
+        if (chatModel.getConfig().getDevTemperature() < 1.0) request.temperature(0.2);
+        if (chatModel.getConfig().getCompactModel() != null) request.modelName(chatModel.getConfig().getCompactModel());
 
-        return new StreamingBridge().call(chatModel, request.build(), monitor);
+        return chatModel.callBlocking(request.build(), monitor);
     }
 
     String toText(ChatMessage msg) {

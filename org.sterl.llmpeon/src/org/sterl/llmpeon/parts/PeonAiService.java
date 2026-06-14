@@ -106,7 +106,8 @@ public class PeonAiService implements MessageProvider {
                          Consumer<IFile> openInEditorCallback,
                          Consumer<Boolean> mcpStateChange) {
 
-        configuredModel = LlmPreferenceInitializer.buildWithDefaults().build();
+        var config = LlmPreferenceInitializer.buildWithDefaults();
+        configuredModel = config.build();
 
         var rootPath            = EclipseUtil.workspacePath();
         toolService             = new ToolService();
@@ -130,15 +131,12 @@ public class PeonAiService implements MessageProvider {
         toolService.addTool(new EclipseCodeNavigationTool());
         toolService.addTool(new EclipseConsoleLogTool());
 
-        var config = configuredModel.getConfig();
-        var model = config.build();
-
-        developerService = new AiDeveloperService(model, toolService);
-        plannerService   = new AiPlannerService(model, toolService);
+        developerService = new AiDeveloperService(configuredModel, toolService);
+        plannerService   = new AiPlannerService(configuredModel, toolService);
 
         // Agent mode uses separate instances with isolated memory
-        var agentDev  = new AiDeveloperService(model, toolService);
-        var agentPlan = new AiPlannerService(model, toolService);
+        var agentDev  = new AiDeveloperService(configuredModel, toolService);
+        var agentPlan = new AiPlannerService(configuredModel, toolService);
         agentMode     = new AgentModeService(agentPlan, agentDev, sendTrigger, openInEditorCallback);
         agentModeTool = new AgentModeTool(agentMode);
 
@@ -153,7 +151,6 @@ public class PeonAiService implements MessageProvider {
      */
     public void updateConfig(LlmConfig config) {
         configuredModel.updateConfig(config);
-
         updateActiveDiskTools(config);
         if (config.getSkillDirectory() != null && !config.getSkillDirectory().isBlank()) {
             try {
@@ -298,7 +295,7 @@ public class PeonAiService implements MessageProvider {
 
     public void setModel(AiModel model) {
         if (this.getActiveService().setModelName(model)) {
-            LlmPreferenceInitializer.setModel(model.getId());
+            LlmPreferenceInitializer.setModel(model.getId(), getPeonMode());
         }
     }
 

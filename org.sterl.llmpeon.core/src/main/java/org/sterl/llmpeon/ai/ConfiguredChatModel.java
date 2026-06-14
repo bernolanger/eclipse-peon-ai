@@ -70,7 +70,6 @@ public class ConfiguredChatModel {
         }
 
         config = builder.build();
-        chatModel.set(null); // rebuild
         return true;
     }
     
@@ -84,7 +83,6 @@ public class ConfiguredChatModel {
         
         var builder = config.toBuilder().model(aiModel);
         config = builder.build();
-        chatModel.set(null); // rebuild
         return true;
     }
 
@@ -116,10 +114,6 @@ public class ConfiguredChatModel {
         }
     }
     
-    public int getAutoCompactAfter() {
-        return config.getAutoCompactAfter();
-    }
-
     public void updateConfig(LlmConfig newConfig) {
         if (newConfig == null) throw new NullPointerException("LlmConfig cannot be null!");
         if (this.config == null || !this.config.equals(newConfig)) {

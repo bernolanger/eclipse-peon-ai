@@ -49,6 +49,11 @@ public abstract class AbstractChatService {
     protected abstract String getSystemPrompt();
     protected abstract double getTemperature();
 
+    /** Returns the configured model name for this agent type, or null to use default. */
+    protected String resolveAgentModel() {
+        return null;
+    }
+
     /**
      * Apply only static filters to tools -- any change kills the KV cache!
      * https://github.com/ggml-org/llama.cpp/issues/22746#issuecomment-4630455537
@@ -66,7 +71,7 @@ public abstract class AbstractChatService {
     public int tokenContextUsedInPercent() {
         float used = memory.getTotalTokenUsed();
         if (used < 100) return 0;
-        return Math.round(used / Math.min(configuredModel.getAutoCompactAfter(), 4000));
+        return Math.round(used / Math.min(configuredModel.getConfig().getAutoCompactAfter(), 4000));
     }
 
     public boolean hasUserText(String message) {
@@ -78,7 +83,7 @@ public abstract class AbstractChatService {
         monitor = AiMonitor.nullSafety(monitor);
         monitor.onCallStart(message);
         // auto compress if we are close to full before we start
-        if (configuredModel.getAutoCompactAfter() < memory.getTotalTokenUsed()) compressContext(monitor);
+        if (configuredModel.getConfig().getAutoCompactAfter() < memory.getTotalTokenUsed()) compressContext(monitor);
         
         var contents = new ArrayList<String>();
         if (userContextInformations.size() > 0) {
@@ -110,6 +115,7 @@ public abstract class AbstractChatService {
                     .toolFilter(getToolFilter())
                     .includeMcpTools(includesMcpTools())
                     .temperature(getTemperature())
+                    .modelName(resolveAgentModel())
                     .build()
                 );
 
@@ -118,9 +124,7 @@ public abstract class AbstractChatService {
     }
 
     public ChatResponse compressContext(AiMonitor monitor) {
-        var response = new AiCompressorAgent(
-                    configuredModel.getChatModel(), 
-                    configuredModel.getConfig().getDevTemperature() < 1.0 ? 0.2 : null)
+        var response = new AiCompressorAgent(configuredModel)
                 .call(memory.getCopy(), monitor);
         
         memory.clear();
@@ -160,7 +164,7 @@ public abstract class AbstractChatService {
         memory.add(message);
     }
     public int getContextSize() { return memory.getTotalTokenUsed(); }
-    public int getAutoCompactAfter() { return configuredModel.getAutoCompactAfter(); }
+    public int getAutoCompactAfter() { return configuredModel.getConfig().getAutoCompactAfter(); }
 
     private List<ChatMessage> buildStaticMessages(AiMonitor monitor) {
         var messages = new ArrayList<ChatMessage>();

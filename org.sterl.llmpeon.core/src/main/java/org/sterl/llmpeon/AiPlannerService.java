@@ -29,6 +29,11 @@ public class AiPlannerService extends AbstractChatService {
     }
 
     @Override
+    protected String resolveAgentModel() {
+        return configuredModel.getConfig().getPlanModel();
+    }
+
+    @Override
     protected Predicate<SmartToolExecutor> getToolFilter() {
         return super.getToolFilter().and(t -> !t.getTool().isEditTool());
     }

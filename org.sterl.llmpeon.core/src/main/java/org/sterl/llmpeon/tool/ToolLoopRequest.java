@@ -38,6 +38,7 @@ public class ToolLoopRequest {
     @Getter
     @NonNull
     private final ThreadSafeMemory memory;
+    @Getter
     @NonNull
     private final ConfiguredChatModel chatModel;
     @Default
@@ -55,15 +56,14 @@ public class ToolLoopRequest {
     public boolean includeMcpTools = true;
     @Nullable
     public Double temperature;
+    /** Per-agent model override — null means use the configured default. */
+    @Nullable
+    public String modelName;
 
     public void addMessage(ChatMessage message) {
         memory.add(message);
     }
 
-    public StreamingChatModel getChatModel() {
-        return chatModel.getChatModel();
-    }
-    
     public LlmConfig getConfig() {
         return chatModel.getConfig();
     }
@@ -98,6 +98,11 @@ public class ToolLoopRequest {
 
     public ToolLoopRequest temperature(double temperature) {
         this.temperature = temperature;
+        return this;
+    }
+
+    public ToolLoopRequest modelName(String modelName) {
+        this.modelName = modelName;
         return this;
     }
 }

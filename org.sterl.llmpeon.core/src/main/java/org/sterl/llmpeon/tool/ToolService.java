@@ -109,6 +109,7 @@ public class ToolService {
                     .messages(messages)
                     .toolSpecifications(toolSpecifications(req));
             if (req.temperature != null) builder.temperature(req.temperature);
+            if (StringUtil.hasValue(req.modelName)) builder.modelName(req.modelName);
 
             req.getMonitor().onChatMessage(++iterations, builder);
             response = req.call(builder.build());

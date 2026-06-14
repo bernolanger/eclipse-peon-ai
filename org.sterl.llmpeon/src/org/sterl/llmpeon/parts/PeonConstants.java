@@ -1,6 +1,7 @@
 package org.sterl.llmpeon.parts;
 
 import org.eclipse.core.runtime.IStatus;
+import org.sterl.llmpeon.PeonMode;
 import org.eclipse.core.runtime.Status;
 
 public interface PeonConstants {
@@ -41,19 +42,16 @@ public interface PeonConstants {
     String PREF_AGENTS_MD_ENABLED  = "agentsMd.enabled";   // boolean, default true
 
     String PREF_MODEL            = "llm.model";
-    /*
-    String PREF_DEV_MODEL    = "llm.devModel";
-    String PREF_PLAN_MODEL   = "llm.planModel";
-    String PREF_SEARCH_MODEL = "llm.searchModel";
-    
-    public static String modelPref(PeonMode mode) {
-        switch (mode) {
-            case DEV: return PREF_DEV_MODEL;
-            case PLAN: return PREF_PLAN_MODEL;
-            default: return PREF_MODEL;
-        }
+    String PREF_PLAN_MODEL       = "llm.planModel";
+    String PREF_SEARCH_MODEL     = "llm.searchModel";
+    String PREF_COMPACT_MODEL    = "llm.compactModel";
+
+    static String modelPref(PeonMode mode) {
+        return switch (mode) {
+            case PLAN -> PREF_PLAN_MODEL;
+            default -> PREF_MODEL; // AGENT and fallback
+        };
     }
-    */
 
     public static IStatus okStatus(String message) {
         return new Status(IStatus.OK, PLUGIN_ID, message);

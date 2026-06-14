@@ -32,16 +32,19 @@ public class SearchAgentTool extends AbstractTool {
             var messages = new ThreadSafeMemory();
             messages.add(UserMessage.from(prompt));
 
-            var devTemp = this.request.getConfig().getDevTemperature();
+            var cfg = this.request.getConfig();
+            
+            var request = this.request.toBuilder()
+                .staticMessages(Arrays.asList(system))
+                .includeMcpTools(true)
+                .toolFilter(e -> !e.getTool().isEditTool() && !(e.getTool() instanceof SearchAgentTool))
+                .memory(messages);
+
+            if (cfg.getDevTemperature() < 1) request.temperature(0.3);
+            if (cfg.getSearchModel() != null) request.modelName(cfg.getSearchModel());
+
             onTool("SearchAgent start: " + prompt);
-            var response = toolService.executeLoop(this.request.toBuilder()
-                    .staticMessages(Arrays.asList(system))
-                    .includeMcpTools(true)
-                    .toolFilter(e -> !e.getTool().isEditTool() && !(e.getTool() instanceof SearchAgentTool))
-                    .temperature(devTemp < 1 ? 0.2 : devTemp)
-                    .memory(messages)
-                    .build()
-                );
+            var response = toolService.executeLoop(request.build());
 
             onTool("SearchAgent done for: " + prompt);
             String answer = response != null ? response.aiMessage().text() : null;

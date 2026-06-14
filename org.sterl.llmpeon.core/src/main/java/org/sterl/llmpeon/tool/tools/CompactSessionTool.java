@@ -18,11 +18,9 @@ public class CompactSessionTool extends AbstractTool {
             """)
     public String compactSession(
             @P(description = "Short instructions or next steps to keep and echo back after compression.", required = false, name = "preserve") String preserve) {
-        var cfg = this.request.getConfig();
         var model = this.request.getChatModel();
-        var temp = cfg.getDevTemperature() < 1 ? Math.min(cfg.getDevTemperature() / 2, 0.3) : 1;
 
-        var summary = new AiCompressorAgent(model, temp)
+        var summary = new AiCompressorAgent(model)
                 .call(this.request.getMemory().getCopy(), monitor);
 
         // only if we have a valid result -- also ensure the first message is a user message, some LLMs need this ...

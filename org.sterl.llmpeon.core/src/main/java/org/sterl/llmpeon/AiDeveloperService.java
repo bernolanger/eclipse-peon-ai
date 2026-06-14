@@ -21,4 +21,9 @@ public class AiDeveloperService extends AbstractChatService {
     protected double getTemperature() {
         return configuredModel.getConfig().getDevTemperature();
     }
+
+    @Override
+    protected String resolveAgentModel() {
+        return configuredModel.getConfig().getModel();
+    }
 }

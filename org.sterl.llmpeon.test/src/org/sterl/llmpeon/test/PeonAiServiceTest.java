@@ -119,6 +119,23 @@ public class PeonAiServiceTest  extends AbstractTest {
         assertContains(ChatMessageUtil.toString(userMessages.get(0)), "Test Specifics");
     }
     
+    @Test
+    public void test_update_token_limit() throws IOException {
+        assumeTrue("Eclipse workspace not available", isWorkspaceAvailable());
+        var config = aiService.getConfig().toBuilder()
+                .providerType(AiProvider.OPEN_AI)
+                .url(mockLlmServer.getUrl()).build();
+        aiService.updateConfig(config);
+
+        // WHEN
+        aiService.updateConfig(config.toBuilder().autoCompactAfter(4000).build());
+
+        // THEN
+        assertEquals(4000, aiService.getConfig().getAutoCompactAfter());
+        assertEquals(4000, aiService.getDeveloperService().getAutoCompactAfter());
+        assertEquals(4000, aiService.getPlannerService().getAutoCompactAfter());
+    }
+    
     // TODO add tests concerning the message build -- check if it was properly constructed.
 
 }

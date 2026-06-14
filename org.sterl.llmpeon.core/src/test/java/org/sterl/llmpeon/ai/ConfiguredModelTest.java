@@ -66,7 +66,7 @@ class ConfiguredModelTest {
 
         assertTrue(changed);
         assertEquals("new", subject.getModelName());
-        assertEquals(80000, subject.getAutoCompactAfter());
+        assertEquals(80000, subject.getConfig().getAutoCompactAfter());
     }
 
     @Test
@@ -79,7 +79,7 @@ class ConfiguredModelTest {
 
         assertTrue(changed);
         assertEquals("new", subject.getModelName());
-        assertEquals(9000, subject.getAutoCompactAfter());
+        assertEquals(9000, subject.getConfig().getAutoCompactAfter());
     }
 
 }

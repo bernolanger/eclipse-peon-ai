@@ -34,6 +34,12 @@ public class LlmConfig {
     private final AiProvider providerType = AiProvider.OLLAMA;
     @Default
     private final String model = null;
+    @Default
+    private final String planModel = null;
+    @Default
+    private final String compactModel = null;
+    @Default
+    private final String searchModel = null;
     @NonNull
     @Default
     private final Duration timeout = Duration.ofMinutes(3);

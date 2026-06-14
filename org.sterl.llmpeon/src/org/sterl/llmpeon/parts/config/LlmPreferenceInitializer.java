@@ -16,6 +16,7 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.sterl.llmpeon.ai.AiProvider;
 import org.sterl.llmpeon.ai.LlmConfig;
+import org.sterl.llmpeon.PeonMode;
 import org.sterl.llmpeon.parts.PeonConstants;
 import org.sterl.llmpeon.parts.shared.EclipseUtil;
 import org.sterl.llmpeon.parts.shared.JdtUtil;
@@ -93,6 +94,9 @@ public class LlmPreferenceInitializer extends AbstractPreferenceInitializer {
             .headerParams(parseCsvMap(prefs.get(PeonConstants.PREF_HEADER_PARAMS, "")))
             .shellCommandConfirmationRequired("always".equals(prefs.get(PeonConstants.PREF_SHELL_CONFIRMATION_ENABLED, "")) ||
                     "not-autonomous".equals(prefs.get(PeonConstants.PREF_SHELL_CONFIRMATION_ENABLED, "")))
+            .planModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_PLAN_MODEL, null)))
+            .planModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_PLAN_MODEL, null)))
+            .searchModel(StringUtil.stripToNull(prefs.get(PeonConstants.PREF_SEARCH_MODEL, null)))
             .build();
     }
 
@@ -122,11 +126,12 @@ public class LlmPreferenceInitializer extends AbstractPreferenceInitializer {
         return dirValue;
     }
 
-    public static void setModel(String model) {
+    public static void setModel(String model, PeonMode mode) {
         if (model == null) return;
         try {
             var prefs = InstanceScope.INSTANCE.getNode(PeonConstants.PLUGIN_ID);
-            prefs.put(PeonConstants.PREF_MODEL, model);
+            String key = PeonConstants.modelPref(mode);
+            prefs.put(key, model);
             prefs.flush();
         } catch (Exception e) {
             LOG.warn("Failed to save model preference", e);
