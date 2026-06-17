@@ -58,7 +58,8 @@ final class FileDropSupport {
 
             @Override
             public void drop(DropTargetEvent event) {
-                var text = formatDroppedPaths(pathsFromDropData(event.data));
+                boolean localSelectionAccepted = isTransferAccepted(event, LocalSelectionTransfer.getTransfer());
+                var text = formatDroppedPaths(pathsFromDropData(event.data, localSelectionAccepted));
                 if (text.isEmpty()) return;
                 insertAtSelection(targetText, text);
                 targetText.setFocus();
@@ -70,6 +71,16 @@ final class FileDropSupport {
         if (event.detail == DND.DROP_DEFAULT || event.detail == DND.DROP_NONE) {
             event.detail = DND.DROP_COPY;
         }
+    }
+
+    private static boolean isTransferAccepted(DropTargetEvent event, Transfer transfer) {
+        if (event.currentDataType != null && transfer.isSupportedType(event.currentDataType)) return true;
+        var types = event.dataTypes;
+        if (types == null || types.length == 0) return false;
+        for (var t : types) {
+            if (transfer.isSupportedType(t)) return true;
+        }
+        return false;
     }
 
     private static void insertAtSelection(StyledText targetText, String text) {
@@ -90,13 +101,18 @@ final class FileDropSupport {
         return result.toString();
     }
 
-    static List<String> pathsFromDropData(Object data) {
+    static List<String> pathsFromDropData(Object data, boolean localSelectionAccepted) {
         var paths = new ArrayList<String>();
         addDropPaths(paths, data);
-        if (paths.isEmpty()) {
+        if (paths.isEmpty() && localSelectionAccepted) {
             addDropPaths(paths, LocalSelectionTransfer.getTransfer().getSelection());
         }
         return paths;
+    }
+
+    // For testing only: delegates with default fallback behavior.
+    static List<String> pathsFromDropData(Object data) {
+        return pathsFromDropData(data, true);
     }
 
     private static void addDropPaths(List<String> paths, Object data) {

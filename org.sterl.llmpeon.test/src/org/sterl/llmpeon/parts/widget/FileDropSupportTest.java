@@ -1,6 +1,7 @@
 package org.sterl.llmpeon.parts.widget;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
 
@@ -29,6 +30,8 @@ public class FileDropSupportTest {
 
     @Test
     public void readsWorkspaceResourcePaths() {
+        assumeTrue("workspace not available", workspaceAvailable());
+
         var resource = ResourcesPlugin.getWorkspace().getRoot()
                 .getProject("Project")
                 .getFile("pom.xml");
@@ -39,7 +42,18 @@ public class FileDropSupportTest {
 
     @Test
     public void keepsExternalOsFileTransferPaths() {
+        assumeTrue("workspace not available", workspaceAvailable());
+
         assertEquals(List.of("/tmp/external-file.txt"),
                 FileDropSupport.pathsFromDropData(new String[] { "/tmp/external-file.txt" }));
+    }
+
+    private static boolean workspaceAvailable() {
+        try {
+            ResourcesPlugin.getWorkspace().getRoot();
+            return true;
+        } catch (IllegalStateException e) {
+            return false;
+        }
     }
 }
