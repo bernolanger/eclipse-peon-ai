@@ -7,6 +7,7 @@ import java.nio.file.Files;
 
 import org.junit.jupiter.api.Test;
 import org.sterl.llmpeon.AbstractMemoryFileTest;
+import org.sterl.llmpeon.shared.StringUtil;
 
 class PromptYmlParserTest extends AbstractMemoryFileTest {
 
@@ -45,11 +46,12 @@ class PromptYmlParserTest extends AbstractMemoryFileTest {
         assertThat(prompt.getName()).isEqualTo("review");
         assertThat(prompt.getDescription()).isEqualTo("Review changes");
         // AND
-        assertThat(prompt.getBody()).isEqualTo("""
-                body
-                and
-                even
-                more""");
+        assertThat(StringUtil.normelizeEndings(prompt.getBody()))
+                .isEqualTo(StringUtil.normelizeEndings("""
+                        body
+                        and
+                        even
+                        more"""));
     }
 
     @Test
@@ -348,9 +350,10 @@ class PromptYmlParserTest extends AbstractMemoryFileTest {
         // THEN the frontmatter "comment" is NOT stripped (documented limitation)
         assertThat(prompt.firstOrDefault("model", null)).isEqualTo("qwen3.6-27b   # optional override");
         // AND the body keeps its markdown heading untouched
-        assertThat(prompt.getBody()).isEqualTo("""
+        assertThat(StringUtil.normelizeEndings(prompt.getBody())).isEqualTo(
+                StringUtil.normelizeEndings("""
                 # Heading in body
-                text""");
+                text"""));
     }
 
     @Test

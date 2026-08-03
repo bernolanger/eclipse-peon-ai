@@ -162,6 +162,8 @@
             color: #7a9aa4;
             font-style: italic;
             word-break: break-word;
+            max-height: 300px;
+            overflow-y: auto;
         }
         
         .live-chunk::after {
@@ -251,6 +253,8 @@
             window.scrollTo(0, document.body.scrollHeight);
         }
 
+
+
         function updateLiveResponse(stateMessage, tokPerSec, thinkChunk) {
             var el = document.getElementById("live-status");
             if (!el) {
@@ -259,11 +263,24 @@
                 document.body.appendChild(el);
             }
             var rate = tokPerSec > 0 ? " | " + tokPerSec.toFixed(1) + " tok/s" : "";
-            var chunk = thinkChunk && thinkChunk != "" && thinkChunk != "null" ? "<div class='live-chunk'>" + thinkChunk + "</div>" : "";
+            var textWithBr = (thinkChunk && thinkChunk !== "null")
+                ? thinkChunk.replace(/\r\n/g, '<br>').replace(/\n/g, '<br>')
+                : "";
+            var chunk = textWithBr ? "<div class='live-chunk'>" + textWithBr + "</div>" : "";
             el.innerHTML = "<span class='live-state'>" + stateMessage + rate + "</span>" + chunk;
 
-            if (el.style.display !== "block") {
-                el.style.display = "block";
+            var wasHidden = (el.style.display !== "block");
+            el.style.display = "block";
+
+            if (textWithBr) {
+                var chunkEl = el.querySelector('.live-chunk');
+                if (chunkEl) {
+                    chunkEl.scrollTop = chunkEl.scrollHeight;
+                }
+            }
+
+            // Scroll page to bottom after live preview becomes visible
+            if (wasHidden) {
                 window.scrollTo(0, document.body.scrollHeight);
             }
         }
@@ -288,7 +305,7 @@
             }
             window.scrollTo(0, document.body.scrollHeight);
         }
-
+        
         document.addEventListener("click", e => {
             const name = e.target.closest(".d2h-file-name");
             if (name) {
