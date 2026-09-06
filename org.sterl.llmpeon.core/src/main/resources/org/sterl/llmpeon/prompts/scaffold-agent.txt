@@ -100,4 +100,8 @@ Default content creates Peon-PO first, then alphabetical:
 Examples:
 - `^Peon-Dev$` — Peon-Dev first, then alphabetical.
 - `.*Manager.*` — All agents with "Manager" in their name, grouped alphabetically.
-- `.*Manager.*\n.*Worker.*` — Managers first, then workers, then others.
+- Managers first, then workers, then others:
+  ```text
+  .*Manager.*
+  .*Worker.*
+  ```
