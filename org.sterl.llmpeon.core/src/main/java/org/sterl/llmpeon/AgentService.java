@@ -204,7 +204,7 @@ public class AgentService {
     }
 
     public boolean reloadAgents() {
-        if (Files.isDirectory(agentsDirectory)) {
+        if (agentsDirectory != null && Files.isDirectory(agentsDirectory)) {
             try {
                 ensureOrderFileExists();
                 parseOrderFile();

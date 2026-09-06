@@ -1,7 +1,6 @@
 package org.sterl.llmpeon.agent;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -171,6 +170,33 @@ class AgentServiceTest extends AbstractMemoryFileTest {
 
         // THEN
         assertThat(service.get("docs").orElseThrow().getAgentModelName()).isEqualTo("b");
+    }
+
+    @Test
+    void refreshWithNullPathClearsAgents() throws Exception {
+        // GIVEN — a custom agent loaded over a real directory
+        writeAgent(tmp, "docs", """
+                ---
+                name: docs
+                ---
+                body
+                """);
+        service.reloadAgents();
+        assertThat(service.get("docs")).isPresent();
+
+        // WHEN
+        var result = service.refresh((Path) null);
+
+        // THEN — mirrors SkillService: clears agents, does not throw
+        assertThat(result).isTrue();
+        assertThat(service.get("docs")).isEmpty();
+    }
+
+    @Test
+    void constructorWithNullDirectoryDoesNotThrow() {
+        // WHEN / THEN
+        var subject = new AgentService(false, null, toolService, chatModel);
+        assertThat(subject.hasAgents()).isFalse();
     }
 
     @Test
