@@ -108,9 +108,7 @@ public class AgentService {
     }
 
     /**
-     * Returns loaded and persistent agents ordered by {@code agent-order.txt} regex patterns.
-     * Matches are grouped by pattern (alphabetically within each group), followed by unmatched agents alphabetically.
-     * Falls back to Peon-PO first, then alphabetical, when no valid patterns exist — see {@link AgentOrder}.
+     * Returns loaded and persistent agents in configured order.
      */
     public List<AiAgent> getAgents() {
         var all = new java.util.LinkedHashSet<AiAgent>(agents.values());
