@@ -9,11 +9,13 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Stream;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.sterl.llmpeon.agent.AiAgent;
 
 /**
@@ -25,9 +27,8 @@ import org.sterl.llmpeon.agent.AiAgent;
  * "Peon-PO first" has a single source of truth: the default file content, not a type check against a concrete agent class.
  * </ul>
  */
+@Slf4j
 public class AgentOrder {
-
-    private static final Logger LOG = Logger.getLogger(AgentOrder.class.getName());
 
     public static final String AGENT_ORDER_FILE = "agent-order.txt";
     public static final String DEFAULT_ORDER_CONTENT = """
@@ -58,7 +59,7 @@ public class AgentOrder {
             try {
                 result.add(Pattern.compile(trimmed));
             } catch (PatternSyntaxException e) {
-                LOG.log(Level.WARNING, "Invalid regex '" + trimmed + "' in " + AGENT_ORDER_FILE + ", skipping: " + trimmed, e);
+                log.warn("Invalid regex '{}' in {}, skipping: {}", trimmed, AGENT_ORDER_FILE, trimmed, e);
             }
         }
         return List.copyOf(result);
