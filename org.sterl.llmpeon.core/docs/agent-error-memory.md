@@ -99,6 +99,40 @@ entspricht (JDK-Envelope: `CompletionException` mit `getMessage() == cause.getCl
   `getMessage() == Cause-Klassenname` (z. B. `ConnectException` ohne Message) WHEN der Call
   scheitert THEN die Exception wird mit URL + Klasse + Ursache angereichert.
 
+### R-AEM-4 — Stream-Truncation bricht den Tool-Loop ab ✅ done (2026-11-03)
+
+Eine kaputte Provider-Antwort (Stream-Truncation, unvollständige Tool-Call-Payload) ist **nicht
+retryable** — ein Retry bekommt wieder dieselbe kaputte Antwort, und weiterzuloopen mit einer
+halbgeparsten Tool-Call-Payload korrumpiert den Turn. Erkennung und Wirkung:
+
+- **Erkennung** am Choke-Point `ToolLoopRequest.call`: eine Exception, deren Cause-Kette eine
+  Stream-Truncation-Signatur enthält — nur die spezifischen Transport-Signaturen
+  (`TransferEncodingError`, `Not enough data to satisfy transfer length`, `Response payload is not
+  completed`, case-insensitive, über die Cause-Kette), **nicht** der breite Begriff `truncated`
+  (matcht sonst auch Token-Limit-Truncation), wird als `ToolExecutionPermanentFailureException` neu
+  geworfen.
+- **Kein Retry:** `ApiRetry` erhält einen Guard (`e -> !isPermanentCallFailure(e)`), der eine
+  Permanent-Failure-Exception und eine Truncation-Signatur **vor** dem Backoff stoppt.
+- **Loop-Stopp:** `ToolService.executeLoop` fängt die
+  `ToolExecutionPermanentFailureException` und beendet die Schleife sofort — es wird **keine**
+  weitere Model-Runde gefahren, kein `response == null`-IllegalState geworfen, die zuletzt gültige
+  `response` (oder `null`) zurückgegeben.
+- **Cancel-Parität (R-AEM-3):** eine `CancellationException` wird weiterhin **nie** als
+  Permanent-Failure gewrappt — sie fliegt unverändert hoch.
+- **Nur der AI-Call-Pfad** — Tool-Fehler laufen nicht durch `ToolLoopRequest.call`
+  ([agents-retry.md](agents-retry.md)).
+
+#### UC-AEM-8 — streamTruncationAbortsLoop ✅
+
+- GIVEN die Provider-Antwort bricht mit einer Stream-Truncation-Exception ab (Marker in der
+  Cause-Kette) WHEN der AI-Call im Tool-Loop scheitert THEN der Loop wird ohne Retry und ohne
+  weitere Runde beendet und die `ToolExecutionPermanentFailureException` gemeldet.
+
+#### UC-AEM-9 — cancelNotTreatedAsPermanent ✅
+
+- GIVEN eine `CancellationException` WHEN der Call abbricht THEN sie wird nicht als
+  Permanent-Failure gewrappt, sondern fliegt unverändert hoch.
+
 ## Verifikation
 
 `AiChatView` = SWT-UI — Automatisierung nur soweit die Memory-Logik im Core testbar ist (Dedup,

@@ -1,6 +1,7 @@
 package org.sterl.llmpeon.streaming;
 
 import java.util.concurrent.CancellationException;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.sterl.llmpeon.shared.AiMonitor;
@@ -59,6 +60,14 @@ public class ApiRetry {
      *         (the UI logs this on the give-up path — not logged here to avoid a double log).
      */
     public <T> T call(AiMonitor monitor, Supplier<T> aiCall) {
+        return call(monitor, aiCall, e -> true);
+    }
+
+    public <T> T call(
+            AiMonitor monitor,
+            Supplier<T> aiCall,
+            Predicate<? super RuntimeException> retryable) {
+
         var m = AiMonitor.nullSafety(monitor);
         while (true) {
             try {
@@ -67,9 +76,10 @@ public class ApiRetry {
                 retryCount = 0;
                 return response;
             } catch (CancellationException ce) {
-                throw ce; // a cancel is never a transient error — never retry it
+                throw ce;
             } catch (RuntimeException e) {
-                if (retryCount >= credit) throw e; // out of patience — let the UI log & show it
+                if (!retryable.test(e) || retryCount >= credit) throw e;
+
                 retryCount++;
                 long wait = Math.min((long) retryCount * WAIT_STEP_MS, maxWaitMs);
                 m.onProblem(problemMessage(e, wait));

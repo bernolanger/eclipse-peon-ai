@@ -498,6 +498,57 @@ class ToolServiceTest {
                 .hasMessage("simulated streaming failure");
     }
 
+    // UC-AEM-8, R-AEM-4: stream truncation from a broken provider response must abort the loop
+    @Test
+    void executeLoop_aborts_on_stream_truncation() {
+        // GIVEN — the provider stream fails with a TransferEncodingError (truncated payload)
+        var cm = mock(StreamingChatModel.class);
+        doAnswer(inv -> {
+            inv.getArgument(1, StreamingChatResponseHandler.class)
+                    .onError(new RuntimeException("TransferEncodingError: Not enough data to satisfy transfer length"));
+            return null;
+        }).when(cm).chat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        var memory = new ThreadSafeMemory();
+        memory.add(UserMessage.from("Hello"));
+        var req = ToolLoopRequest.builder()
+                .memory(memory)
+                .chatModel(new ConfiguredChatModel(LlmConfig.newOpenAi("foo"), cm))
+                .build();
+
+        // WHEN + THEN — executeLoop catches the permanent failure, does NOT fall into the
+        // response==null IllegalState, and returns null (no prior valid response existed)
+        assertThat(subject.executeLoop(req)).isNull();
+    }
+
+    // UC-AEM-9, R-AEM-4: a cancel carrying a truncation marker is NOT re-wrapped — cancellation wins
+    // over truncation. ToolLoopRequest.call() checks isCanceled BEFORE isStreamTruncation; if that
+    // order were flipped, this CancellationException would be wrapped as
+    // ToolExecutionPermanentFailureException and executeLoop would swallow it (return null) instead
+    // of propagating the cancel.
+    @Test
+    void executeLoop_cancel_with_truncation_marker_stays_a_cancel() {
+        // GIVEN — the provider cancels, and the CancellationException's message carries a truncation
+        // marker (TransferEncodingError) that isStreamTruncation would otherwise detect
+        var cm = mock(StreamingChatModel.class);
+        doAnswer(inv -> {
+            inv.getArgument(1, StreamingChatResponseHandler.class)
+                    .onError(new CancellationException("TransferEncodingError: Not enough data to satisfy transfer length"));
+            return null;
+        }).when(cm).chat(any(ChatRequest.class), any(StreamingChatResponseHandler.class));
+        var memory = new ThreadSafeMemory();
+        memory.add(UserMessage.from("Hello"));
+        var req = ToolLoopRequest.builder()
+                .memory(memory)
+                .chatModel(new ConfiguredChatModel(LlmConfig.newOpenAi("foo"), cm))
+                .build();
+
+        // WHEN + THEN — still a cancel, NOT wrapped as ToolExecutionPermanentFailureException
+        assertThatThrownBy(() -> subject.executeLoop(req))
+                .isInstanceOf(CancellationException.class)
+                .hasMessageContaining("TransferEncodingError");
+    }
+
+
     /**
      * Bug proof: the compact hint path dereferenced req.getAgent().getName() — NPE when the
      * @Nullable agent is null (think-only AI, forced hint) — fixed via null-safe agent name, inc-1 8b2431e.

@@ -1,7 +1,9 @@
 package org.sterl.llmpeon.tool;
 
 import java.time.Instant;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
@@ -12,6 +14,7 @@ import org.sterl.llmpeon.ai.ConfiguredChatModel;
 import org.sterl.llmpeon.ai.EffectiveConnection;
 import org.sterl.llmpeon.ai.LlmConfig;
 import org.sterl.llmpeon.exception.ExceptionUtil;
+import org.sterl.llmpeon.exception.ToolExecutionPermanentFailureException;
 import org.sterl.llmpeon.memory.ThreadSafeMemory;
 import org.sterl.llmpeon.shared.AiMonitor;
 import org.sterl.llmpeon.shared.StringUtil;
@@ -28,6 +31,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Command object for {@link ToolService#executeLoop(ToolLoopRequest)}.
@@ -47,8 +51,14 @@ import lombok.NonNull;
  * https://github.com/ggml-org/llama.cpp/issues/22746
  * https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-4586088278
  */
+@Slf4j
 @Builder(toBuilder = true)
 public class ToolLoopRequest {
+
+    private static final List<String> STREAM_TRUNCATION_MARKERS = List.of(
+            "transferencodingerror",
+            "not enough data to satisfy transfer length",
+            "response payload is not completed");
 
     @Getter
     @NonNull
@@ -125,12 +135,55 @@ public class ToolLoopRequest {
     
     public ChatResponse call(ChatRequest chatRequest) {
         try {
-            return retry.call(monitor, () -> bridge.call(chatModel.modelFor(getAgentConfig()), chatRequest, monitor, turnStart));
+            return retry.call(
+                    monitor,
+                    () -> bridge.call(
+                            chatModel.modelFor(getAgentConfig()),
+                            chatRequest,
+                            monitor,
+                            turnStart),
+                    e -> !isPermanentCallFailure(e));
         } catch (RuntimeException e) {
-            // R-AEM-3: a cancel is never an error, and a useful message is never enriched twice.
-            if (ExceptionUtil.isCanceled(e) || !hasUselessMessage(e)) throw e;
+            // R-AEM-3: Cancellation is never an error.
+            if (ExceptionUtil.isCanceled(e)) throw e;
+
+            // Do not retry or continue the tool loop with a truncated tool-call response.
+            if (e instanceof ToolExecutionPermanentFailureException) throw e;
+            if (isStreamTruncation(e)) {
+                throw new ToolExecutionPermanentFailureException(e);
+            }
+
+            // R-AEM-3: A useful message is never enriched twice.
+            if (!hasUselessMessage(e)) throw e;
+
             throw new RuntimeException(messageLessFailure(e), e);
         }
+    }
+
+    private static boolean isPermanentCallFailure(Throwable error) {
+        return error instanceof ToolExecutionPermanentFailureException
+                || isStreamTruncation(error);
+    }
+
+    /**
+     * Looks through the cause chain because streaming/network libraries commonly wrap the
+     * original transfer error. Identity tracking prevents an unusual cyclic cause chain.
+     */
+    private static boolean isStreamTruncation(Throwable error) {
+        var seen = new IdentityHashMap<Throwable, Boolean>();
+
+        for (var current = error; current != null && seen.put(current, Boolean.TRUE) == null; current = current.getCause()) {
+            var message = current.getMessage();
+            if (message == null)
+                continue;
+
+            var normalized = message.toLowerCase(Locale.ROOT);
+            for (var marker : STREAM_TRUNCATION_MARKERS) {
+                if (normalized.contains(marker))
+                    return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -14,6 +14,7 @@ import org.jspecify.annotations.NonNull;
 import org.sterl.llmpeon.agent.model.TaggedResult;
 import org.sterl.llmpeon.compact.HandleToolLoopCompactComponent;
 import org.sterl.llmpeon.exception.ExceptionUtil;
+import org.sterl.llmpeon.exception.ToolExecutionPermanentFailureException;
 import org.sterl.llmpeon.mcp.McpService;
 import org.sterl.llmpeon.queuedmessages.QueuedUserMessages;
 import org.sterl.llmpeon.shared.OwnerMonitor;
@@ -146,9 +147,7 @@ public class ToolService {
      * Runs the full tool loop: calls the model via streaming, executes any tools, repeats until
      * the model produces a plain text response.
      * 
-     * TODO: https://github.com/sterlp/eclipse-peon-ai/issues/55
      * Keep in mind any change to the message history may kill the kv cache!!
-     * https://github.com/sterlp/eclipse-peon-ai/issues/60
      */
     @NonNull
     public ChatResponse executeLoop(@NonNull ToolLoopRequest req) {
@@ -182,7 +181,15 @@ public class ToolService {
                     .parameters(agentConfig.newRequestParameters(specs));
 
             req.getMonitor().onChatMessage(++iterations, builder);
-            response = req.call(builder.build());
+            try {
+                response = req.call(builder.build());
+            } catch (ToolExecutionPermanentFailureException e) {
+                // R-AEM-4: broken provider response (stream truncation) — abort the loop
+                // immediately, no further model round, no re-parse of a half-parsed payload.
+                log.error("Permanent provider failure, aborting tool loop.", e);
+                req.getMonitor().onProblem("Aborting tool loop: " + e.getMessage());
+                return response; // last valid response, or null
+            }
 
             if (response == null) {
                 throw new IllegalStateException("AI call returned null — streaming failed without a response");
