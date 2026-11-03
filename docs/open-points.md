@@ -2,6 +2,17 @@
 
 Status je Punkt: ❓ offen · ⏳ selbst entschieden (Rückversicherung mit User steht aus) · 🔒 geklärt.
 Geklärte Punkte ohne eigenes Feature-Doc: [resolved-points.md](resolved-points.md).
+
+## 2026-11-03 — R-AEM-4 Follow-up (Stream-Truncation-Abort)
+
+- ❓ **SSE-Error strukturiert auswerten statt String-Matching** (R-AEM-4, Frage):
+  `ToolLoopRequest.call` erkennt Stream-Truncation aktuell über hart codierte Message-Signaturen
+  (Cause-Ketten-Scan). Sauberer wäre, das SSE-Error-Objekt im Streaming-Pfad strukturiert zu parsen
+  und daraus einen typisierten Fehler zu erzeugen. Braucht Zugriff in die Bridge/Streaming-Schicht —
+  bewusst NICHT im R-AEM-4-Commit (größerer Eingriff), eigenes Feature. Hinweis: `litellm.APIConnectionError`
+  ist bewusst KEIN Abbruchkriterium — breite Kategorie, kann vorübergehende/wiederholbare
+  Verbindungsfehler enthalten.
+
 ## 2026-10-31 — Issues vom Reparatur-Zyklus (Paul: „erst aufnehmen, Fix auf Ansage")
 
 - 🔒 **Issue 2 — Default-Sortierung im Dropdown defekt** (gebaut auf `web-factory-goon`): der
