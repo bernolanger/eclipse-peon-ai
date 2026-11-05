@@ -85,10 +85,11 @@ public class EclipseWorkspaceWriteFileTool extends AbstractEclipseTool {
 
     }
 
-    @Tool("Replace a single line in a workspace file by 1-based line number. newContent may span multiple lines.")
+    @Tool("Replace a range of lines in a workspace file by 1-based line numbers. newContent may span multiple lines.")
     public void eclipseReplaceLines(
             @P(description = "workspace-relative path", name = "filePath") String filePath,
             @P(description = "line to replace (1-based)", name = "line") Integer line,
+            @P(description = "end line to replace (1-based, inclusive); if omitted, defaults to line", name = "endLine", required = false) Integer endLine,
             @P(description = "replacement text", name ="newContent") String newContent) {
 
         ArgsUtil.requireNonBlank(filePath, "filePath");
@@ -102,7 +103,7 @@ public class EclipseWorkspaceWriteFileTool extends AbstractEclipseTool {
                     + EclipseUtil.unresolvedHint(filePath));
         }
         String content = readFile(eclipseFile);
-        String newFullContent = FileLines.replaceLines(content, line, line, newContent);
+        String newFullContent = FileLines.replaceLines(content, line, endLine != null ? endLine : line, newContent);
 
         IoUtils.writeFile(eclipseFile, newFullContent, getProgressMonitor());
         monitor.onFileUpdate(new AiFileUpdate(JdtUtil.pathOf(eclipseFile), content, newFullContent));

@@ -111,14 +111,52 @@ class DiskFileWriteToolTest {
     @Test
     void replaceDiskLines_basic() throws IOException {
         Files.writeString(tempDir.resolve("rep.txt"), "line1\nline2\nline3");
-        tool.diskReplaceLines("rep.txt", 2, "replaced");
+        tool.diskReplaceLines("rep.txt", 2, null, "replaced");
         assertEquals("line1\nreplaced\nline3", Files.readString(tempDir.resolve("rep.txt")));
     }
 
     @Test
+    void replaceLines_range() throws IOException {
+        // GIVEN a 5-line file
+        Files.writeString(tempDir.resolve("rangeRep.txt"), "line1\nline2\nline3\nline4\nline5");
+
+        // WHEN replace lines 2-3 with a 2-line replacement
+        tool.diskReplaceLines("rangeRep.txt", 2, 3, "newLine2\nnewLine3");
+
+        // THEN surrounding lines untouched, correct line count
+        assertEquals("line1\nnewLine2\nnewLine3\nline4\nline5",
+                Files.readString(tempDir.resolve("rangeRep.txt")));
+    }
+
+    @Test
+    void replaceLines_fullRange() throws IOException {
+        // GIVEN a 3-line file
+        Files.writeString(tempDir.resolve("rangeFull.txt"), "a\nb\nc");
+
+        // WHEN replace lines 1-3 with a single line
+        tool.diskReplaceLines("rangeFull.txt", 1, 3, "single");
+
+        // THEN file contains only the replacement
+        assertEquals("single", Files.readString(tempDir.resolve("rangeFull.txt")));
+    }
+
+    @Test
+    void replaceLines_rangeAutoSwap() throws IOException {
+        // GIVEN a 4-line file
+        Files.writeString(tempDir.resolve("rangeSwap.txt"), "a\nb\nc\nd");
+
+        // WHEN end < start (FileLines auto-swaps)
+        tool.diskReplaceLines("rangeSwap.txt", 3, 1, "replaced");
+
+        // THEN range 1-3 replaced, line 4 untouched
+        assertEquals("replaced\nd", Files.readString(tempDir.resolve("rangeSwap.txt")));
+    }
+
+
+    @Test
     void replaceDiskLines_multiLine() throws IOException {
         Files.writeString(tempDir.resolve("rep.txt"), "a\nb\nc\nd");
-        tool.diskReplaceLines("rep.txt", 2, "x\ny");
+        tool.diskReplaceLines("rep.txt", 2, null, "x\ny");
         assertEquals("a\nx\ny\nc\nd", Files.readString(tempDir.resolve("rep.txt")));
     }
 
@@ -131,7 +169,7 @@ class DiskFileWriteToolTest {
 
         // WHEN diskReplaceLines is called THEN the guard fires with the exact message
         var ex = assertThrows(IllegalArgumentException.class,
-                () -> tool.diskReplaceLines(missing, 1, "x"));
+                () -> tool.diskReplaceLines(missing, 1, null, "x"));
         assertEquals("File not found: " + missing, ex.getMessage());
 
         // WHEN diskEditFile is called THEN the guard fires with the message plus the search hint
@@ -453,7 +491,7 @@ class DiskFileWriteToolTest {
         Files.writeString(tempDir.resolve("indentRep.txt"), "alpha\naaaa\ngamma");
 
         // WHEN line 2 is replaced by its indented form
-        tool.diskReplaceLines("indentRep.txt", 2, "    aaaa");
+        tool.diskReplaceLines("indentRep.txt", 2, null, "    aaaa");
 
         // THEN exactly one line changed, no insert-copy below, indent exactly as passed
         assertEquals("alpha\n    aaaa\ngamma", Files.readString(tempDir.resolve("indentRep.txt")));
@@ -464,17 +502,17 @@ class DiskFileWriteToolTest {
     // reports the actual facts and leaves the file untouched.
 
     @Test
-    void diskReplaceLines_lineBeyondEnd_errorsFileUntouched() throws IOException {
-        // GIVEN a 3-line file
-        Files.writeString(tempDir.resolve("range.txt"), "l1\nl2\nl3");
+    void diskReplaceLines_rangeBeyondEnd_errorsFileUntouched() throws IOException {
+        // GIVEN a 5-line file
+        Files.writeString(tempDir.resolve("rangeBeyond.txt"), "l1\nl2\nl3\nl4\nl5");
 
-        // WHEN a line number beyond the end is requested
+        // WHEN range end beyond end
         var ex = assertThrows(IllegalArgumentException.class,
-                () -> tool.diskReplaceLines("range.txt", 99, "x"));
+                () -> tool.diskReplaceLines("rangeBeyond.txt", 3, 99, "x"));
 
         // THEN the error carries the actual facts and the file is untouched
-        assertThat(ex.getMessage()).contains("file has 3 lines").contains("99");
-        assertEquals("l1\nl2\nl3", Files.readString(tempDir.resolve("range.txt")));
+        assertThat(ex.getMessage()).contains("file has 5 lines").contains("3-99");
+        assertEquals("l1\nl2\nl3\nl4\nl5", Files.readString(tempDir.resolve("rangeBeyond.txt")));
     }
 
     @Test

@@ -111,10 +111,11 @@ public class DiskFileWriteTool extends AbstractTool {
         }
     }
     
-    @Tool("Replace a single line by 1-based line number. newContent may span multiple lines.")
+    @Tool("Replace a range of lines by 1-based line numbers. newContent may span multiple lines.")
     public void diskReplaceLines(
             @P(name = "filePath") String filePath,
             @P(name = "line", description = "line to replace (1-based)") Integer line,
+            @P(description = "end line to replace (1-based, inclusive); if omitted, defaults to line", name = "endLine", required = false) Integer endLine,
             @P(name = "newContent") String newContent) {
 
         ArgsUtil.requireNonBlank(filePath, "filePath");
@@ -124,7 +125,7 @@ public class DiskFileWriteTool extends AbstractTool {
         Path resolved = requireRegularFile(filePath);
         try {
             String content = Files.readString(resolved);
-            String newFullContent = FileLines.replaceLines(content, line, line, newContent);
+            String newFullContent = FileLines.replaceLines(content, line, endLine != null ? endLine : line, newContent);
             Files.writeString(resolved, newFullContent);
             monitor.onFileUpdate(new AiFileUpdate(workingDir.relativize(resolved).toString(), content, newFullContent));
             fireAfterWrite();

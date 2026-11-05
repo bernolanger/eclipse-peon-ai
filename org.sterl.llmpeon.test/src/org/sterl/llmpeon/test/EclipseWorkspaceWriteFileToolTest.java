@@ -149,7 +149,7 @@ public class EclipseWorkspaceWriteFileToolTest extends AbstractIntegrationTest {
         eclipseWriteFile(fileName, "line1\nline2\nline3\nline4\nline5");
 
         // WHEN — replace middle line 3, expanding it to two lines
-        tool.eclipseReplaceLines(fileName, 3, "replaced3a\nreplaced3b");
+        tool.eclipseReplaceLines(fileName, 3, null, "replaced3a\nreplaced3b");
 
         // THEN — surrounding lines untouched, middle replaced
         var content = readTool.eclipseReadFile(fileName, 0, 0);
@@ -193,7 +193,7 @@ public class EclipseWorkspaceWriteFileToolTest extends AbstractIntegrationTest {
         eclipseWriteFile(fileName, "alpha\naaaa\ngamma");
 
         // WHEN line 2 is replaced by its indented form
-        tool.eclipseReplaceLines(fileName, 2, "    aaaa");
+        tool.eclipseReplaceLines(fileName, 2, null, "    aaaa");
 
         // THEN exactly one line changed, no insert-copy below, indent exactly as passed
         var onDisk = Files.readString(project.getLocation().append("indentRep.txt").toFile().toPath());
@@ -214,7 +214,7 @@ public class EclipseWorkspaceWriteFileToolTest extends AbstractIntegrationTest {
 
         // WHEN a line number beyond the end is requested
         var ex = assertThrows(IllegalArgumentException.class,
-                () -> tool.eclipseReplaceLines(fileName, 99, "x"));
+                () -> tool.eclipseReplaceLines(fileName, 99, null, "x"));
 
         // THEN the error carries the actual facts and the file on disk is untouched
         assertTrue("expected line count + range in: " + ex.getMessage(),
@@ -222,6 +222,63 @@ public class EclipseWorkspaceWriteFileToolTest extends AbstractIntegrationTest {
         var onDisk = Files.readString(project.getLocation().append("replaceRange.txt").toFile().toPath());
         assertEquals("l1\nl2\nl3\nl4\nl5", onDisk);
     }
+
+    @Test
+    public void test_replaceWorkspaceLine_range() {
+        assumeTrue("Eclipse workspace not available", isWorkspaceAvailable());
+        // GIVEN a 5-line workspace file
+        tool.setCurrentProject(project);
+        var fileName = "/test_project/replaceRangeTest.txt";
+        eclipseWriteFile(fileName, "line1\nline2\nline3\nline4\nline5");
+
+        // WHEN replace lines 2-3 with a 2-line replacement
+        tool.eclipseReplaceLines(fileName, 2, 3, "newLine2\nnewLine3");
+
+        // THEN surrounding lines untouched, correct line count
+        var content = readTool.eclipseReadFile(fileName, 0, 0);
+        assertTrue(content, content.contains("line1"));
+        assertTrue(content, content.contains("newLine2"));
+        assertTrue(content, content.contains("newLine3"));
+        assertTrue(content, content.contains("line4"));
+        assertTrue(content, content.contains("line5"));
+        assertFalse(content, content.contains("line2"));
+        assertFalse(content, content.contains("line3"));
+    }
+
+    @Test
+    public void test_replaceWorkspaceLine_fullRange() {
+        assumeTrue("Eclipse workspace not available", isWorkspaceAvailable());
+        // GIVEN a 3-line file
+        tool.setCurrentProject(project);
+        var fileName = "/test_project/replaceFullRange.txt";
+        eclipseWriteFile(fileName, "a\nb\nc");
+
+        // WHEN replace lines 1-3 with a single line
+        tool.eclipseReplaceLines(fileName, 1, 3, "single");
+
+        // THEN file contains only the replacement
+        assertEquals("   1: single\n", readTool.eclipseReadFile(fileName, 0, 0));
+    }
+
+    @Test
+    public void test_replaceWorkspaceLine_rangeBeyondEnd_errorsFileUntouched() throws Exception {
+        assumeTrue("Eclipse workspace not available", isWorkspaceAvailable());
+        // GIVEN a 5-line workspace file
+        tool.setCurrentProject(project);
+        var fileName = "/test_project/replaceRangeBeyond.txt";
+        eclipseWriteFile(fileName, "l1\nl2\nl3\nl4\nl5");
+
+        // WHEN range end beyond end
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> tool.eclipseReplaceLines(fileName, 3, 99, "x"));
+
+        // THEN the error carries the actual facts and the file on disk is untouched
+        assertTrue("expected range in: " + ex.getMessage(),
+                ex.getMessage().contains("file has 5 lines") && ex.getMessage().contains("3-99"));
+        var onDisk = Files.readString(project.getLocation().append("replaceRangeBeyond.txt").toFile().toPath());
+        assertEquals("l1\nl2\nl3\nl4\nl5", onDisk);
+    }
+
 
 
     @Test
